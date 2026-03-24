@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Profile - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        .input-group { margin-bottom: 1.5rem; }
+        .input-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1e293b; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .btn-primary { 
+            background: #10b981; color: white; border: none; padding: 12px 24px; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; 
+        }
+        .btn-primary:hover { background: #059669; }
+    </style>
+</head>
+<body class="theme-volunteer">
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-hands-helping"></i>
+            Street Care
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-th-large"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="find_tasks.html" class="nav-link">
+                    <i class="fas fa-search-location"></i>
+                    Find Tasks
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_tasks.html" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    My Assignments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_impact.html" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    My Impact
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="profile.html" class="nav-link active">
+                    <i class="fas fa-user-circle"></i>
+                    Profile
+                </a>
+            </li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar" style="background: #10b981;">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #a7f3d0;">Volunteer Hero</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a7f3d0; padding: 5px;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h2 style="margin:0;">My Profile</h2>
+                <p style="color: #64748b; margin:0;">Manage your account and preferences</p>
+            </div>
+        </div>
+
+        <div class="profile-container" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); max-width: 600px;">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700;">
+                    <span id="profile-avatar">?</span>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.5rem;" id="profile-name">Loading...</h3>
+                    <p style="margin: 5px 0 0 0; color: #64748b;" id="profile-email-display">user@example.com</p>
+                </div>
+            </div>
+
+            <form id="profile-form" onsubmit="event.preventDefault(); saveProfile();">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="full_name" class="form-control" required>
+                </div>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="phone" class="form-control" placeholder="+1 234 567 8900">
+                </div>
+                <div class="input-group">
+                    <label>Location (City/Area)</label>
+                    <input type="text" id="location" class="form-control" placeholder="e.g. New York, NY">
+                </div>
+                
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        
+        // Add Logout button to sidebar manually if API doesn't do it dynamically or to ensure it works
+        // (Sidebar logic is mostly static HTML here but let's keep it consistent)
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: ${type === 'success' ? '#0f172a' : '#ef4444'}; 
+                color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; 
+                gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;
+            `;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove() }, 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        async function loadProfile() {
+            // Initial render from local storage
+            if(user.full_name) {
+                const initials = user.full_name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase();
+                
+                // Sidebar
+                document.getElementById('user-name').textContent = user.full_name;
+                document.getElementById('user-avatar').textContent = initials;
+                
+                // Main Profile Card
+                document.getElementById('profile-name').textContent = user.full_name;
+                document.getElementById('profile-email-display').textContent = user.email;
+                document.getElementById('profile-avatar').textContent = initials;
+                
+                // Form Inputs
+                document.getElementById('full_name').value = user.full_name;
+                document.getElementById('email').value = user.email;
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('location').value = user.location || '';
+            }
+
+            if (!user.id) return;
+
+            try {
+                // Fetch fresh data
+                const res = await window.CivicConnectAPI.request(`users.php?action=get&id=${user.id}`);
+                if (res.success) {
+                     const u = res.data;
+                     const initials = u.full_name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase();
+                     
+                     document.getElementById('full_name').value = u.full_name;
+                     document.getElementById('email').value = u.email;
+                     document.getElementById('phone').value = u.phone || '';
+                     document.getElementById('location').value = u.location || '';
+                     
+                     // Update display texts in case they changed
+                     document.getElementById('profile-name').textContent = u.full_name;
+                     document.getElementById('profile-email-display').textContent = u.email;
+                     document.getElementById('profile-avatar').textContent = initials;
+                }
+            } catch (e) {
+                console.error("Error loading profile", e);
+            }
+        }
+
+        async function saveProfile() {
+            const fullName = document.getElementById('full_name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const btn = document.querySelector('.btn-primary');
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const res = await window.CivicConnectAPI.request('users.php', 'POST', {
+                    action: 'update_profile',
+                    user_id: user.id,
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    address: '', 
+                    location: location
+                });
+
+                if (res.success) {
+                    showToast('Profile Updated Successfully');
+                    // Update local storage
+                    const newUser = { ...user, ...res.user };
+                    localStorage.setItem('user_data', JSON.stringify(newUser));
+                    
+                    // Update UI immediately
+                    const initials = newUser.full_name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase();
+                    
+                    document.getElementById('user-name').textContent = newUser.full_name;
+                    document.getElementById('user-avatar').textContent = initials;
+                    document.getElementById('profile-name').textContent = newUser.full_name;
+                    document.getElementById('profile-email-display').textContent = newUser.email;
+                    document.getElementById('profile-avatar').textContent = initials;
+                    
+                } else {
+                    showToast('Failed to update: ' + res.error, 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error saving profile', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

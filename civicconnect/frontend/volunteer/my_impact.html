@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Impact - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body class="theme-volunteer">
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-hands-helping"></i>
+            Street Care
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-th-large"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="find_tasks.html" class="nav-link">
+                    <i class="fas fa-search-location"></i>
+                    Find Tasks
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_tasks.html" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    My Assignments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_impact.html" class="nav-link active">
+                    <i class="fas fa-chart-pie"></i>
+                    My Impact
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="profile.html" class="nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    Profile
+                </a>
+            </li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar" style="background: #10b981;">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #a7f3d0;">Volunteer Hero</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a7f3d0; padding: 5px;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h2 style="margin:0;">My Impact</h2>
+                <p style="color: #64748b; margin:0;">See the difference you are making!</p>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; color: #10b981; font-weight: 700;">-</div>
+                <p style="color: #64748b; margin-top: 0.5rem;">Total Tasks Completed</p>
+            </div>
+             <div class="stat-card" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; color: #3b82f6; font-weight: 700;">-</div>
+                <p style="color: #64748b; margin-top: 0.5rem;">Hours Contributed</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2rem;">Badges Earned</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <i class="fas fa-seedling" style="font-size: 2rem; color: #10b981; margin-bottom: 0.5rem;"></i>
+                <h4 style="margin: 0.5rem 0; font-size: 1rem;">First Step</h4>
+                <small style="color: #94a3b8;">Completed 1st Task</small>
+            </div>
+            <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <i class="fas fa-broom" style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.5rem;"></i>
+                <h4 style="margin: 0.5rem 0; font-size: 1rem;">Cleaner</h4>
+                <small style="color: #94a3b8;">5 Cleanup Tasks</small>
+            </div>
+             <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); opacity: 0.5;">
+                <i class="fas fa-medal" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+                <h4 style="margin: 0.5rem 0; font-size: 1rem;">Super Hero</h4>
+                <small style="color: #94a3b8;">Complete 50 Tasks</small>
+                <div style="margin-top: 5px; font-size: 0.7rem; color: #10b981;">Locked</div>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await window.CivicConnectAPI.request(`volunteers_backend.php?action=stats&user_id=${user.id}`);
+                if(res.success) {
+                    // Update stats
+                    const completed = res.stats.completed || 0;
+                    const cleanupCompleted = res.stats.cleanup_completed || 0;
+                    const hours = res.stats.hours || 0;
+                    
+                    document.querySelector('.stat-card:nth-child(1) div').textContent = completed;
+                    document.querySelector('.stat-card:nth-child(2) div').textContent = hours + 'h';
+
+                    // Update badges... (rest of badge logic)
+                    const badgeContainer = document.querySelector('h3').nextElementSibling;
+                    
+                    badgeContainer.innerHTML = `
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); ${completed >= 1 ? '' : 'opacity: 0.5;'}">
+                            <i class="fas fa-seedling" style="font-size: 2rem; color: ${completed >= 1 ? '#10b981' : '#cbd5e1'}; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0.5rem 0; font-size: 1rem;">First Step</h4>
+                            <small style="color: #94a3b8;">Completed 1st Task</small>
+                        </div>
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); ${cleanupCompleted >= 5 ? '' : 'opacity: 0.5;'}">
+                            <i class="fas fa-broom" style="font-size: 2rem; color: ${cleanupCompleted >= 5 ? '#f59e0b' : '#cbd5e1'}; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0.5rem 0; font-size: 1rem;">Cleaner</h4>
+                            <small style="color: #94a3b8;">5 Cleanup Tasks (${cleanupCompleted}/5)</small>
+                        </div>
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); ${completed >= 50 ? '' : 'opacity: 0.5;'}">
+                            <i class="fas fa-medal" style="font-size: 2rem; color: ${completed >= 50 ? '#3b82f6' : '#cbd5e1'}; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0.5rem 0; font-size: 1rem;">Super Hero</h4>
+                            <small style="color: #94a3b8;">Complete 50 Tasks (${completed}/50)</small>
+                        </div>
+                    `;
+                }
+            } catch(e) { 
+                console.error(e); 
+                document.querySelector('.stat-card:nth-child(1) div').textContent = '0';
+                document.querySelector('.stat-card:nth-child(2) div').textContent = '0h';
+            }
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html>

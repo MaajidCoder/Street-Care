@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Registration - Street Care</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Outfit', sans-serif; display: flex; height: 100vh; overflow: hidden; background: white; }
+        
+        /* Left Brand Section */
+        .brand-section {
+            flex: 1;
+            background: #064e3b; /* Emerald Dark */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-section::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(6,78,59,0) 100%);
+            z-index: 1;
+        }
+
+        .brand-content { position: relative; z-index: 2; max-width: 500px; }
+        .brand-logo { font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 15px; }
+        .brand-logo i { color: #34d399; }
+        .brand-desc { font-size: 1.2rem; line-height: 1.6; color: #a7f3d0; margin-bottom: 2rem; }
+        
+        .feature-list { list-style: none; padding: 0; margin: 0; }
+        .feature-item { display: flex; align-items: center; gap: 15px; margin-bottom: 1rem; font-size: 1rem; color: #d1fae5; }
+        .feature-item i { color: #34d399; width: 24px; text-align: center; }
+
+        /* Right Form Section */
+        .form-section {
+            width: 550px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 4rem;
+            background: #ffffff;
+            overflow-y: auto;
+        }
+
+        .register-card { width: 100%; max-width: 450px; }
+        
+        .page-title { font-size: 2rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+        .page-subtitle { color: #64748b; margin-bottom: 2rem; }
+
+        .input-group { margin-bottom: 1.25rem; }
+        .input-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #334155; }
+        .input-group input { 
+            width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 10px; 
+            font-family: inherit; font-size: 1rem; transition: all 0.2s;
+        }
+        .input-group input:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+
+        .btn-primary { 
+            width: 100%; padding: 1rem; background: #10b981; color: white; 
+            border: none; border-radius: 10px; font-weight: 600; cursor: pointer; 
+            font-size: 1rem; transition: all 0.2s; margin-top: 1rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        .btn-primary:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3); }
+
+        .links { margin-top: 2rem; text-align: center; font-size: 0.95rem; color: #64748b; }
+        .links a { color: #10b981; text-decoration: none; font-weight: 600; }
+        .links a:hover { text-decoration: underline; }
+        
+        @media (max-width: 900px) {
+            .brand-section { display: none; }
+            .form-section { width: 100%; padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-section">
+        <div class="brand-content">
+            <div class="brand-logo">
+                <i class="fas fa-hands-helping"></i> Street Care
+            </div>
+            <p class="brand-desc">Join our team of heroes. Volunteer your time and skills to help neighbors and improve your community.</p>
+            <ul class="feature-list">
+                <li class="feature-item"><i class="fas fa-check-circle"></i> Find local volunteer tasks</li>
+                <li class="feature-item"><i class="fas fa-check-circle"></i> Earn badges and impact score</li>
+                <li class="feature-item"><i class="fas fa-check-circle"></i> Connect with others</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="register-card">
+            <h1 class="page-title">Volunteer Sign Up</h1>
+            <p class="page-subtitle">Start your journey as a local hero.</p>
+            
+            <form id="registerForm">
+                <input type="hidden" id="role" value="volunteer">
+                
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="full_name" required placeholder="John Doe">
+                </div>
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" required placeholder="name@example.com">
+                </div>
+
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" placeholder="+1 234 567 8900">
+                </div>
+                
+                <div class="input-group">
+                    <label>Location (City/Area)</label>
+                    <input type="text" id="location" required placeholder="New York, NY">
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Create a password">
+                </div>
+                
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirm_password" required placeholder="Confirm password">
+                </div>
+                
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+
+            <div class="links">
+                Already have an account? <a href="login_volunteer.html">Login here</a><br><br>
+                <a href="../index.html" style="color: #94a3b8; font-weight: 400; font-size: 0.85rem;"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Creating Account...';
+            btn.disabled = true;
+
+            const userData = {
+                role: 'volunteer',
+                full_name: document.getElementById('full_name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                location: document.getElementById('location').value,
+                password: document.getElementById('password').value,
+                confirm_password: document.getElementById('confirm_password').value
+            };
+
+            try {
+                const res = await window.CivicConnectAPI.register(userData);
+                if (res.success) {
+                    alert('Registration successful! Redirecting to login...');
+                    window.location.href = 'login_volunteer.html';
+                } else {
+                    alert(res.error || 'Registration failed');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred during registration');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Orders - Authority</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        :root { --primary-color: #6366f1; --primary-dark: #4f46e5; }
+        .sidebar { background: #1e1b4b; border-right: none; color: white; }
+        .sidebar .nav-link { color: #a5b4fc; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #312e81; color: white; }
+        .sidebar .logo { color: white; }
+        .user-profile { border-top-color: #312e81; color: white; }
+        .avatar { background-color: #4f46e5; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-university"></i>
+                Street Care Auth
+            </div>
+            
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="work_orders.html" class="nav-link active">
+                        <i class="fas fa-tasks"></i>
+                        Work Orders
+                    </a>
+                </li>
+            </ul>
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="font-weight: 600;" id="user-name">Authority Officer</div>
+                    <div style="font-size: 0.8rem; color: #a5b4fc;">Dept. of Public Works</div>
+                </div>
+                <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a5b4fc;" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Work Orders</h1>
+                    <p>Manage in-progress and assigned tasks.</p>
+                </div>
+            </div>
+
+            <div class="filters-bar" style="margin-bottom: 2rem; display:flex; gap: 10px;">
+                <button class="btn-primary" onclick="loadWorkOrders('all')" style="background: #e2e8f0; color: #1e293b;">All</button>
+                <button class="btn-primary" onclick="loadWorkOrders('in_progress')">In Progress</button>
+                <button class="btn-primary" onclick="loadWorkOrders('assigned')" style="background: #e2e8f0; color: #1e293b;">Assigned</button>
+            </div>
+            
+            <div id="orders-list" class="issues-grid">
+                <p>Loading work orders...</p>
+            </div>
+        </main>
+    </div>
+    
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+         const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+         if(user.full_name) document.getElementById('user-name').textContent = user.full_name;
+
+         async function loadWorkOrders(filter = 'all') {
+            try {
+                // We'll use the 'work_orders' action we are about to create
+                const res = await window.CivicConnectAPI.request('../backend/api/authority_backend.php?action=work_orders');
+                const container = document.getElementById('orders-list');
+                
+                if (res.success && res.data.length > 0) {
+                    let orders = res.data;
+                    if(filter !== 'all') {
+                        orders = orders.filter(o => o.status === filter);
+                    }
+                    
+                    if (orders.length === 0) {
+                        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No work orders found for this category.</p>';
+                        return;
+                    }
+
+                    container.innerHTML = orders.map(order => `
+                        <div class="issue-card">
+                            <div class="issue-header">
+                                <span class="status-badge status-${order.status}">${order.status.replace('_', ' ')}</span>
+                                <small>#${order.id}</small>
+                            </div>
+                            <div class="issue-body">
+                                <h4 class="issue-title">${order.title}</h4>
+                                <p class="issue-desc">${order.description}</p>
+                                <div style="margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; font-size: 0.85rem;">
+                                    <strong><i class="fas fa-hard-hat"></i> Assigned To:</strong> ${order.volunteer_id ? 'Volunteer #' + order.volunteer_id : 'Unassigned'}
+                                </div>
+                            </div>
+                            <div class="issue-footer" style="flex-direction: column; gap: 10px; align-items: stretch;">
+                                <small><i class="fas fa-map-marker-alt"></i> ${order.area || order.location_address}</small>
+                                <div style="display: flex; gap: 5px;">
+                                    <button onclick="updateStatus(${order.id}, 'resolved')" class="btn-primary" style="flex: 1; background: #10b981;">Mark Resolved</button>
+                                     <button onclick="updateStatus(${order.id}, 'closed')" class="btn-primary" style="flex: 1; background: #ef4444;">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No active work orders.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('orders-list').innerHTML = '<p style="color:red; text-align:center;">Error loading orders.</p>';
+            }
+         }
+
+         async function updateStatus(id, status) {
+             if(!confirm('Update status to ' + status + '?')) return;
+             try {
+                 const res = await window.CivicConnectAPI.updateIssueStatus(id, status);
+                 if (res.success) {
+                     loadWorkOrders(); // Refresh
+                 } else {
+                     alert('Failed: ' + res.error);
+                 }
+             } catch (err) {
+                 alert('Error updating status');
+             }
+         }
+
+         loadWorkOrders('in_progress'); // Default view
+    </script>
+</body>
+</html>

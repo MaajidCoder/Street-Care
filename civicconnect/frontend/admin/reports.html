@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Reports - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        :root { --primary-color: #0f172a; --accent-color: #3b82f6; }
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; color: white; }
+        .sidebar .nav-link { color: #94a3b8; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .sidebar .nav-link.active { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left-color: #60a5fa; }
+        .sidebar .logo { color: white; border-bottom: 1px solid #1e293b; }
+        
+        /* Premium Table Styles */
+        .data-table-container { 
+            background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; overflow: hidden;
+        }
+        
+        .filters-bar { padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
+        .search-box { position: relative; width: 300px; }
+        .search-box input { width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1.25rem 1.5rem; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        td { padding: 1.25rem 1.5rem; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:hover td { background: #f8fafc; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .status-pending { background: #fffbeb; color: #d97706; }
+        .status-assigned { background: #eff6ff; color: #2563eb; }
+        .status-resolved { background: #dcfce7; color: #166534; }
+        
+        .action-btn { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; color: #475569; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; font-weight: 500; }
+        .action-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
+        .action-btn.primary { background: #0f172a; color: white; border-color: #0f172a; }
+        .action-btn.primary:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="reports.html" class="nav-link active"><i class="fas fa-clipboard-list"></i> Reports</a></li>
+            <li class="nav-item"><a href="volunteers.html" class="nav-link"><i class="fas fa-users"></i> Volunteers</a></li>
+            <li class="nav-item"><a href="departments.html" class="nav-link"><i class="fas fa-city"></i> Departments</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cogs"></i> Settings</a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" style="background:#0f172a;">A</div>
+            <div style="flex: 1;"><div style="font-weight: 600;">System Admin</div></div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0;">Report Management</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">View, triage, and assign issues reported by citizens.</p>
+            </div>
+            <button class="btn-primary" onclick="alert('Exporting data to CSV...')"><i class="fas fa-file-export"></i> Export Data</button>
+        </div>
+
+        <div class="data-table-container">
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search reports..." onkeyup="filterReports()">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select class="action-btn" id="category-filter" onchange="filterReports()">
+                        <option value="">All Categories</option>
+                        <!-- Dynamic options -->
+                    </select>
+                    <select class="action-btn" id="status-filter" onchange="filterReports()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Issue Details</th>
+                        <th>Location</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-body">
+                    <!-- Dynamic Content -->
+                    <tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">Loading reports...</td></tr>
+                </tbody>
+            </table>
+            
+            <div style="padding: 1rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: center;">
+                 <button class="action-btn" style="border: none;">Load More Results</button>
+            </div>
+        </div>
+    </div>
+    <!-- Tracking Modal -->
+    <div id="tracking-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 90%; max-width: 700px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease-out;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <div>
+                    <h2 style="margin: 0; color: #0f172a; font-size: 1.25rem;">Report Tracking</h2>
+                    <div style="font-size: 0.85rem; color: #64748b;" id="modal-report-id">#RP-2024-001</div>
+                </div>
+                <button onclick="closeModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="padding: 2rem; display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+                <!-- Timeline Section -->
+                <div>
+                    <h3 style="margin-top: 0; font-size: 1rem; color: #334155; margin-bottom: 1.5rem;">Status Timeline</h3>
+                    <div class="timeline" style="border-left: 2px solid #e2e8f0; padding-left: 1.5rem; margin-left: 10px;">
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                            <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid white; box-shadow: 0 0 0 2px #10b981;"></div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">Issue Reported</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Today, 9:41 AM</div>
+                        </div>
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                             <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 2px solid white; box-shadow: 0 0 0 2px #3b82f6;"></div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">Under Review</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Today, 10:15 AM • Assigned to <span style="color: #3b82f6;">Sarah Jenkins</span></div>
+                        </div>
+                         <div style="position: relative;">
+                             <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; border: 2px solid white;"></div>
+                            <div style="font-weight: 600; color: #94a3b8; font-size: 0.95rem;">Resolution in Progress</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Pending Action</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Section -->
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Category</div>
+                        <div style="font-weight: 600; color: #0f172a;" id="modal-category">Hazardous Waste</div>
+                    </div>
+                     <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Location</div>
+                        <div style="font-weight: 600; color: #0f172a;">Downtown District</div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Priority</div>
+                        <div style="display: inline-block; background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-top: 4px;">HIGH</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 5px;">Update Status</div>
+                        <select id="modal-status-select" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="pending">Pending</option>
+                            <option value="under_review">Under Review</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="updateStatus()">Update Status</button>
+                    <button class="btn-primary" style="width: 100%; background: white; color: #334155; border: 1px solid #e2e8f0;" onclick="closeModal()">Close Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        // Simple auth check
+        if (!localStorage.getItem('auth_token')) {
+            window.location.href = '../auth/login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = '../auth/login.html';
+        }
+
+        // Logout button is already present in user-profile section
+
+        // Store all reports to filter locally
+        let allReports = [];
+
+        async function loadReports() {
+            try {
+                // Fix scope issue
+                const response = await window.CivicConnectAPI.getIssues();
+                if (response.success) {
+                    allReports = response.data;
+                    populateCategoryFilter(allReports); // New dynamic population
+                    renderReports(allReports);
+                }
+            } catch (error) {
+                console.error("Error loading reports", error);
+                document.getElementById('reports-body').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ef4444;">Failed to load reports.</td></tr>';
+            }
+        }
+
+        function renderReports(reports) {
+            const tbody = document.getElementById('reports-body');
+            tbody.innerHTML = ''; 
+            
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">No reports found.</td></tr>';
+                return;
+            }
+            
+            reports.forEach(issue => {
+                const tr = document.createElement('tr');
+                const date = new Date(issue.created_at).toLocaleDateString() + ' ' + new Date(issue.created_at).toLocaleTimeString();
+                
+                let statusBadge = '';
+                if(issue.status === 'pending' || issue.status === 'under_review') statusBadge = '<span class="status-badge status-pending"><i class="fas fa-clock"></i> ' + issue.status.replace('_', ' ') + '</span>';
+                else if(issue.status === 'assigned') statusBadge = '<span class="status-badge status-assigned"><i class="fas fa-user-cog"></i> Assigned</span>';
+                else if(issue.status === 'resolved' || issue.status === 'closed') statusBadge = '<span class="status-badge status-resolved"><i class="fas fa-check-circle"></i> Resolved</span>';
+                else statusBadge = `<span class="status-badge" style="background:#f1f5f9; color:#475569;">${issue.status}</span>`;
+
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-weight: 600; color: #64748b;">#RP-${issue.id}</td>
+                    <td>
+                        <div style="font-weight: 600; color: #0f172a;">${issue.title}</div>
+                        <div style="font-size: 0.85rem; color: #64748b;">${issue.category} • ${issue.priority} Priority</div>
+                    </td>
+                    <td>${issue.location_address || issue.area}</td>
+                    <td>${date}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="action-btn primary" onclick="openReview(${issue.id})">Review</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterReports() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const category = document.getElementById('category-filter').value.toLowerCase();
+            const status = document.getElementById('status-filter').value.toLowerCase();
+
+            const filtered = allReports.filter(report => {
+                const matchesSearch = report.title.toLowerCase().includes(search) || 
+                                      report.category.toLowerCase().includes(search) || 
+                                      (report.location_address && report.location_address.toLowerCase().includes(search));
+                
+                const matchesCategory = category === '' || report.category.toLowerCase() === category;
+                const matchesStatus = status === '' || report.status.toLowerCase() === status;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            renderReports(filtered);
+        }
+
+        function populateCategoryFilter(reports) {
+            const filter = document.getElementById('category-filter');
+            // Keep the first "All Categories" option
+            filter.innerHTML = '<option value="">All Categories</option>';
+            
+            // Get unique categories
+            const categories = [...new Set(reports.map(r => r.category))].filter(Boolean);
+            
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat; // Use raw value for filtering match
+                // Display name: Capitalize and replace underscores
+                option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
+                filter.appendChild(option);
+            });
+        }
+
+        loadReports();
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            if(!container) return; 
+            const toast = document.createElement('div');
+            toast.style.cssText = `background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove() }, 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+
+        // Global variable for current issue
+        let currentIssueId = 0;
+
+        async function openReview(id) {
+            currentIssueId = id;
+            document.getElementById('modal-report-id').textContent = '#RP-' + id;
+            
+            // Fetch details
+            try {
+                // Fix scope
+                const response = await window.CivicConnectAPI.request(`issues.php?action=details&id=${id}`);
+                if (response.success) {
+                    const issue = response.issue;
+                    document.getElementById('modal-category').textContent = issue.category;
+                    // Set current status in dropdown
+                    const select = document.getElementById('modal-status-select');
+                    if(select) select.value = issue.status;
+                }
+            } catch(e) { console.error(e); }
+
+            document.getElementById('tracking-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('tracking-modal').style.display = 'none';
+        }
+
+        async function updateStatus() {
+            if(!currentIssueId) return;
+            
+            const newStatus = document.getElementById('modal-status-select').value;
+            const btn = document.querySelector('button[onclick="updateStatus()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Updating...';
+            btn.disabled = true;
+
+            try {
+                // Fix scope
+                // Use generic request if updateIssueStatus doesn't support generic status or is missing
+                await window.CivicConnectAPI.request('issues.php?action=update', 'POST', {
+                    id: currentIssueId,
+                    status: newStatus
+                });
+                
+                showToast('Status Updated to ' + newStatus.replace('_', ' '));
+                closeModal();
+                loadReports();
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to update status');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('tracking-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievements - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        .badges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2rem; }
+        .badge-card { background: white; padding: 2rem; border-radius: 16px; text-align: center; border: 1px solid #f1f5f9; transition: 0.3s; }
+        .badge-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .badge-icon { width: 80px; height: 80px; margin: 0 auto 1rem auto; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #cbd5e1; }
+        .badge-card.unlocked .badge-icon { background: #dbeafe; color: #2563eb; }
+        .badge-card.unlocked.gold .badge-icon { background: #fef3c7; color: #d97706; }
+        .badge-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+        .badge-card p { margin: 0; font-size: 0.85rem; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="my_reports.html" class="nav-link"><i class="fas fa-file-alt"></i> My Reports</a></li>
+            <li class="nav-item"><a href="analytics.html" class="nav-link"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+            <li class="nav-item"><a href="achievements.html" class="nav-link active"><i class="fas fa-medal"></i> Achievements</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link"><i class="fas fa-user-cog"></i> Profile</a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Citizen Account</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Achievements</h1>
+                <p>Track your growth and community impact.</p>
+            </div>
+            
+            <div style="background: white; padding: 1rem 2rem; border-radius: 12px; display: flex; gap: 2rem; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Current Level</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #2563eb;" id="user-level">1</div>
+                </div>
+                <div style="width: 1px; height: 40px; background: #e2e8f0;"></div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Points</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #f59e0b;" id="user-points">0</div>
+                </div>
+                <div style="width: 1px; height: 40px; background: #e2e8f0;"></div>
+                <div style="flex: 1;">
+                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 0.85rem; color: #64748b;">Next Level Progress</span>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #2563eb;" id="level-progress-text">0/100</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                        <div id="level-progress-bar" style="height: 100%; background: var(--grad-1, linear-gradient(135deg, #2563eb 0%, #38bdf8 100%)); width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="badges-grid" style="margin-top: 2rem;">
+            <!-- Badges will be rendered here -->
+             <div class="badge-card unlocked" id="badge-join">
+                <div class="badge-icon"><i class="fas fa-user-check"></i></div>
+                <h3>Citizen #1</h3>
+                <p>Joined Street Care community</p>
+                <div class="progress-wrapper" style="margin-top: 15px; display: none;"></div>
+            </div>
+            
+            <div class="badge-card" id="badge-first">
+                <div class="badge-icon"><i class="fas fa-star"></i></div>
+                <h3>First Report</h3>
+                <p>Submitted your first issue report</p>
+                <div class="progress-wrapper" style="margin-top: 15px;">
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; text-align: right;"><span id="prog-text-first">0/1</span></div>
+                    <div style="height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;">
+                        <div id="prog-bar-first" style="height: 100%; background: #2563eb; width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="badge-card" id="badge-neighbor">
+                <div class="badge-icon"><i class="fas fa-hands-helping"></i></div>
+                <h3>Helpful Neighbor</h3>
+                <p>Report 5 issues in your area</p>
+                 <div class="progress-wrapper" style="margin-top: 15px;">
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; text-align: right;"><span id="prog-text-neighbor">0/5</span></div>
+                    <div style="height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;">
+                        <div id="prog-bar-neighbor" style="height: 100%; background: #2563eb; width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="badge-card" id="badge-hero">
+                <div class="badge-icon"><i class="fas fa-trophy"></i></div>
+                <h3>Community Hero</h3>
+                <p>Have 10 issues resolved reported by you</p>
+                 <div class="progress-wrapper" style="margin-top: 15px;">
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; text-align: right;"><span id="prog-text-hero">0/10</span></div>
+                    <div style="height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;">
+                        <div id="prog-bar-hero" style="height: 100%; background: #2563eb; width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+
+        async function loadAchievements() {
+            try {
+                // Fetch user stats
+                const res = await window.CivicConnectAPI.request(`issues.php?action=list&user_id=${user.id}`);
+                let reportCount = 0;
+                let resolvedCount = 0;
+
+                if (res.success && Array.isArray(res.data)) {
+                    reportCount = res.data.length;
+                    resolvedCount = res.data.filter(i => i.status === 'resolved').length;
+                }
+
+                // --- Level System Logic ---
+                // 10 points per report, 20 points per resolved
+                const points = (reportCount * 10) + (resolvedCount * 20);
+                let level = 1;
+                let nextLevelPoints = 100;
+                
+                if (points >= 100) { level = 2; nextLevelPoints = 250; }
+                if (points >= 250) { level = 3; nextLevelPoints = 500; }
+                if (points >= 500) { level = 4; nextLevelPoints = 1000; }
+                
+                // Keep 'previous level' points in mind for progress bar? 
+                // Simplified: Progress to next level from 0
+                // Or: Points / NextLevelPoints
+                
+                // Let's do simple relative progress for visual
+                let prevLevelPoints = 0;
+                if(level === 2) prevLevelPoints = 100;
+                if(level === 3) prevLevelPoints = 250;
+                if(level === 4) prevLevelPoints = 500;
+
+                const progressPercent = Math.min(100, Math.max(0, ((points - prevLevelPoints) / (nextLevelPoints - prevLevelPoints)) * 100));
+
+                document.getElementById('user-level').textContent = level;
+                document.getElementById('user-points').textContent = points;
+                document.getElementById('level-progress-text').textContent = `${points} / ${nextLevelPoints} pts`;
+                document.getElementById('level-progress-bar').style.width = `${progressPercent}%`;
+
+
+                // --- Badge Logic w/ Progress ---
+                const badges = [
+                    { id: 'badge-join', current: 1, target: 1 }, 
+                    { id: 'badge-first', current: reportCount, target: 1 },
+                    { id: 'badge-neighbor', current: reportCount, target: 5 },
+                    { id: 'badge-hero', current: resolvedCount, target: 10 }
+                ];
+
+                badges.forEach(b => {
+                    const el = document.getElementById(b.id);
+                    if (!el) return;
+
+                    // Update UI Class
+                    if (b.current >= b.target) {
+                        el.classList.add('unlocked');
+                        if(b.id === 'badge-first') el.classList.add('gold');
+                    }
+
+                    // Update Progress Bar
+                    if(b.id !== 'badge-join') { // Skip join badge
+                        const bar = document.getElementById(`prog-bar-${b.id.split('-')[1]}`);
+                        const text = document.getElementById(`prog-text-${b.id.split('-')[1]}`);
+                        
+                        if(bar && text) {
+                            const pct = Math.min(100, (b.current / b.target) * 100);
+                            bar.style.width = `${pct}%`;
+                            text.textContent = `${Math.min(b.current, b.target)} / ${b.target}`;
+                            
+                            if(pct >= 100) {
+                                bar.style.background = '#10b981'; // Green for complete
+                            }
+                        }
+                    }
+                });
+
+            } catch (e) {
+                console.error("Error loading achievements", e);
+            }
+        }
+
+        loadAchievements();
+    </script>
+</body>
+</html>

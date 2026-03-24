@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Tasks - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body class="theme-volunteer">
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-hands-helping"></i>
+            Street Care
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-th-large"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="find_tasks.html" class="nav-link">
+                    <i class="fas fa-search-location"></i>
+                    Find Tasks
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_tasks.html" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    My Assignments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_impact.html" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    My Impact
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="profile.html" class="nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    Profile
+                </a>
+            </li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar" style="background: #10b981;">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #a7f3d0;">Volunteer Hero</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a7f3d0; padding: 5px;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h2 style="margin:0;">Find Tasks</h2>
+                <p style="color: #64748b; margin:0;">Explore opportunities to help your community</p>
+            </div>
+        </div>
+
+        <!-- Map/Search Placeholder -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="search-input" placeholder="Search by area, title or category..." style="flex: 1; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <button class="btn-primary" style="padding: 10px 20px;" onclick="applyFilters()">Search</button>
+            </div>
+            <div style="margin-top: 1rem; display: flex; gap: 10px; overflow-x: auto;" id="category-filters">
+                <span class="status-badge status-pending" onclick="selectCategory('all', this)" style="cursor: pointer; border: 2px solid transparent;">All</span>
+                <span class="status-badge" onclick="selectCategory('garbage_waste', this)" style="background:#f1f5f9; color: #475569; cursor: pointer; border: 2px solid transparent;">Garbage</span>
+                <span class="status-badge" onclick="selectCategory('road_infrastructure', this)" style="background:#f1f5f9; color: #475569; cursor: pointer; border: 2px solid transparent;">Roads</span>
+                <span class="status-badge" onclick="selectCategory('street_lighting', this)" style="background:#f1f5f9; color: #475569; cursor: pointer; border: 2px solid transparent;">Lighting</span>
+                <span class="status-badge" onclick="selectCategory('public_safety', this)" style="background:#f1f5f9; color: #475569; cursor: pointer; border: 2px solid transparent;">Safety</span>
+            </div>
+        </div>
+
+        <div class="issues-grid">
+            <!-- Tasks will be loaded here -->
+            <p>Loading tasks...</p>
+        </div>
+    </div>
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+    
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+        const container = document.getElementById('toast-container');
+        let allTasks = [];
+        let currentCategory = 'all';
+
+        // ... showToast function ...
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                margin-top: 10px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideIn 0.3s ease-out;
+                font-weight: 500;
+            `;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+            .status-badge.active { border-color: #2563eb !important; background: #eff6ff !important; color: #2563eb !important; }
+        `;
+        document.head.appendChild(style);
+
+        async function handleTaskAction(btn, issueId) {
+             const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                 const res = await window.CivicConnectAPI.request('volunteers_backend.php?action=accept_task', 'POST', {
+                     issue_id: issueId,
+                     user_id: user.id
+                 });
+                 
+                 if (res.success) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Accepted';
+                    btn.style.background = '#059669';
+                    showToast('Task Accepted!');
+                    // Instead of full reload, just remove the item or refresh list
+                    setTimeout(loadTasks, 1500);
+                 } else {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showToast('Failed: ' + res.error, 'error');
+                 }
+            } catch (e) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Error processing request', 'error');
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await window.CivicConnectAPI.getIssues();
+                
+                if (res.success && Array.isArray(res.data)) {
+                    // Filter for only pending tasks
+                    allTasks = res.data.filter(i => i.status === 'pending');
+                    renderTasks(allTasks);
+                } else {
+                    renderTasks([]);
+                }
+            } catch (e) {
+                console.error(e);
+                renderTasks([]);
+            }
+        }
+
+        function renderTasks(tasks) {
+             const list = document.querySelector('.issues-grid');
+             
+             if (tasks.length === 0) {
+                 list.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No tasks found matching your criteria.</p>';
+                 return;
+             }
+
+             list.innerHTML = tasks.map(task => `
+                <div class="issue-card">
+                    <div class="issue-header">
+                        <span class="status-badge status-pending">New</span>
+                        <small>${task.category ? task.category.replace('_', ' ') : 'General'}</small>
+                    </div>
+                    <div class="issue-body">
+                        <h4 class="issue-title">${task.title}</h4>
+                        <p class="issue-desc">${task.description}</p>
+                    </div>
+                    <div class="issue-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                       <small><i class="fas fa-map-marker-alt"></i> ${task.area || task.location_address || 'Unknown'}</small>
+                       <button class="btn-primary" style="font-size: 0.85rem; padding: 0.5rem 1rem;" onclick="handleTaskAction(this, ${task.id})">Accept</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(cat, btn) {
+            currentCategory = cat;
+            
+            // Update UI
+            document.querySelectorAll('#category-filters .status-badge').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            const filtered = allTasks.filter(task => {
+                const matchesSearch = 
+                    (task.title && task.title.toLowerCase().includes(query)) ||
+                    (task.description && task.description.toLowerCase().includes(query)) ||
+                    (task.area && task.area.toLowerCase().includes(query)) ||
+                    (task.category && task.category.toLowerCase().includes(query));
+                
+                const matchesCategory = currentCategory === 'all' || (task.category === currentCategory);
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            renderTasks(filtered);
+        }
+
+        // Trigger search on Enter
+        document.getElementById('search-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        loadTasks();
+    </script>
+</body>
+</html>

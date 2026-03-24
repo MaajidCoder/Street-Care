@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        :root { --primary-color: #0f172a; --accent-color: #64748b; }
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; color: white; }
+        .sidebar .nav-link { color: #94a3b8; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .sidebar .nav-link.active { background-color: rgba(255, 255, 255, 0.1); color: white; border-left: 3px solid white; }
+        .sidebar .logo { color: white; border-bottom: 1px solid #1e293b; }
+        
+        .section-header { margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        .form-row { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem; }
+        .form-label { font-weight: 600; color: #0f172a; }
+        .form-desc { font-size: 0.85rem; color: #64748b; margin-top: 5px; }
+        
+        input[type="text"], input[type="email"], select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0f172a; }
+        input:checked + .slider:before { transform: translateX(24px); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="reports.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Reports</a></li>
+            <li class="nav-item"><a href="volunteers.html" class="nav-link"><i class="fas fa-users"></i> Volunteers</a></li>
+            <li class="nav-item"><a href="departments.html" class="nav-link"><i class="fas fa-city"></i> Departments</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link active"><i class="fas fa-cogs"></i> Settings</a></li>
+        </ul>
+         <div class="user-profile">
+            <div class="avatar" style="background:#0f172a;">A</div>
+            <div style="flex: 1;"><div style="font-weight: 600;">System Admin</div></div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+             <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0;">System Settings</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Configure platform preferences and notifications.</p>
+            </div>
+            <button class="btn-primary" onclick="alert('Settings Saved Successfully!')">Save Changes</button>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 2rem; border: 1px solid #e2e8f0; max-width: 800px;">
+            <div class="section-header">
+                <h3>General Configuration</h3>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <div class="form-label">Platform Name</div>
+                    <div class="form-desc">Visible in emails and page titles.</div>
+                </div>
+                <div>
+                    <input type="text" value="Street Care Civic Platform">
+                </div>
+            </div>
+
+             <div class="form-row">
+                <div>
+                    <div class="form-label">Contact Email</div>
+                    <div class="form-desc">For support inquiries.</div>
+                </div>
+                <div>
+                    <input type="email" value="support@streetcare.com">
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 3rem;">
+                <h3>Notifications</h3>
+            </div>
+
+             <div class="form-row">
+                <div>
+                    <div class="form-label">Email Alerts</div>
+                    <div class="form-desc">Receive summaries of new reports.</div>
+                </div>
+                <div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+             <div class="form-row">
+                <div>
+                    <div class="form-label">Volunteer Approvals</div>
+                    <div class="form-desc">Auto-approve verified volunteers.</div>
+                </div>
+                <div>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/api.js"></script>
+</body>
+</html>

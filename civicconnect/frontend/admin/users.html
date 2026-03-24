@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        :root { --primary-color: #0f172a; --accent-color: #3b82f6; }
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; color: white; }
+        .sidebar .nav-link { color: #94a3b8; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .sidebar .nav-link.active { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left-color: #60a5fa; }
+        .sidebar .logo { color: white; border-bottom: 1px solid #1e293b; }
+        
+        .data-table-container { 
+            background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; overflow: hidden;
+        }
+        
+        .filters-bar { padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1.25rem 1.5rem; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        td { padding: 1.25rem 1.5rem; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:hover td { background: #f8fafc; }
+        
+        .role-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .role-citizen { background: #e0f2fe; color: #0369a1; }
+        .role-volunteer { background: #dcfce7; color: #15803d; }
+        .role-admin { background: #f1f5f9; color: #334155; }
+        .role-authority { background: #fef9c3; color: #854d0e; }
+
+        .action-btn { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; color: #475569; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; font-weight: 500; }
+        .action-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
+        .action-btn.delete { color: #ef4444; border-color: #fee2e2; }
+        .action-btn.delete:hover { background: #fef2f2; border-color: #fecaca; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="reports.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Reports</a></li>
+            <li class="nav-item"><a href="volunteers.html" class="nav-link"><i class="fas fa-users"></i> Volunteers</a></li>
+            <li class="nav-item"><a href="users.html" class="nav-link active"><i class="fas fa-user-friends"></i> Users</a></li>
+            <li class="nav-item"><a href="departments.html" class="nav-link"><i class="fas fa-city"></i> Departments</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cogs"></i> Settings</a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" style="background:#0f172a;">A</div>
+            <div style="flex: 1;"><div style="font-weight: 600;">System Admin</div></div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0;">User Management</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Manage platform users, roles, and permissions.</p>
+            </div>
+            <button class="btn-primary" onclick="openAddUserModal()"><i class="fas fa-plus"></i> Add User</button>
+        </div>
+
+        <div class="data-table-container">
+            <div class="filters-bar">
+                <div style="font-weight: 600; color: #334155;">All Users</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="action-btn" onclick="loadUsers()">Refresh</button>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populated by JS -->
+                    <tr><td colspan="6" style="text-align:center;">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; width: 90%; max-width: 500px; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; color: #0f172a;">Add New User</h3>
+                <i class="fas fa-times" onclick="closeAddUserModal()" style="cursor: pointer; color: #64748b; font-size: 1.2rem;"></i>
+            </div>
+            <form id="add-user-form" onsubmit="submitAddUser(event)">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Full Name</label>
+                    <input type="text" name="full_name" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Email</label>
+                    <input type="email" name="email" required style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Password</label>
+                    <input type="password" name="password" required minlength="6" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Role</label>
+                    <select name="role" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
+                        <option value="citizen">Citizen</option>
+                        <option value="volunteer">Volunteer</option>
+                        <option value="admin">Admin</option>
+                        <option value="authority">Authority</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Create User</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if (!localStorage.getItem('auth_token')) window.location.href = '../auth/login.html';
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = '../auth/login.html';
+        }
+
+        const navLinks = document.querySelector('.nav-links');
+        const logoutLi = document.createElement('li');
+        logoutLi.className = 'nav-item';
+        logoutLi.innerHTML = '<a href="#" onclick="logout()" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>';
+        navLinks.appendChild(logoutLi);
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove() }, 3000);
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await window.CivicConnectAPI.request('users.php');
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = '';
+
+                // Handle standardized API response {success: true, data: [...]}
+                const users = response.success && Array.isArray(response.data) ? response.data : [];
+
+                if (users.length > 0) {
+                    users.forEach(u => {
+                        const tr = document.createElement('tr');
+                        const date = new Date(u.created_at).toLocaleDateString();
+                        
+                        tr.innerHTML = `
+                            <td style="font-family: monospace; color: #64748b;">#${u.id}</td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a;">${u.full_name || u.username}</div>
+                                <div style="font-size: 0.85rem; color: #64748b;">${u.email}</div>
+                            </td>
+                            <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+                            <td>${u.status}</td>
+                            <td>${date}</td>
+                            <td>
+                                <button class="action-btn delete" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No users found or error.</td></tr>';
+                }
+            } catch (error) {
+                console.error(error);
+                document.querySelector('tbody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Error loading users: ${error.message}</td></tr>`;
+                showToast('API Error: ' + error.message);
+            }
+        }
+
+        async function deleteUser(id) {
+            if(!confirm('Are you sure you want to delete this user?')) return;
+            try {
+                const res = await window.CivicConnectAPI.request('users.php', 'POST', { action: 'delete', user_id: id });
+                if (res.success) {
+                    showToast('User deleted');
+                    loadUsers();
+                } else {
+                    showToast('Failed to delete: ' + (res.error || 'Unknown error'));
+                }
+            } catch (e) {
+                showToast('Error deleting user');
+            }
+        }
+
+        // Add User Modal Logic
+        function openAddUserModal() {
+            document.getElementById('add-user-modal').style.display = 'flex';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('add-user-modal').style.display = 'none';
+        }
+
+        async function submitAddUser(event) {
+            event.preventDefault();
+            const form = document.getElementById('add-user-form');
+            const data = {
+                action: 'create', // Backend needs to handle this
+                full_name: form.full_name.value,
+                email: form.email.value,
+                password: form.password.value,
+                role: form.role.value
+            };
+
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Creating...';
+            btn.disabled = true;
+
+            try {
+                const res = await window.CivicConnectAPI.request('users.php', 'POST', data);
+                if (res.success) {
+                    showToast('User created successfully');
+                    closeAddUserModal();
+                    form.reset();
+                    loadUsers();
+                } else {
+                    showToast('Failed: ' + (res.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error creating user: ' + (e.message || 'Unknown error'), 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+             const modal = document.getElementById('add-user-modal');
+             if (event.target == modal) {
+                 closeAddUserModal();
+             }
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        loadUsers();
+    </script>
+</body>
+</html>

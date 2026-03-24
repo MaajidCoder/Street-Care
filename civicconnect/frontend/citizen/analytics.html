@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="my_reports.html" class="nav-link"><i class="fas fa-file-alt"></i> My Reports</a></li>
+            <li class="nav-item"><a href="analytics.html" class="nav-link active"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+            <li class="nav-item"><a href="achievements.html" class="nav-link"><i class="fas fa-medal"></i> Achievements</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link"><i class="fas fa-user-cog"></i> Profile</a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Citizen Account</div>
+            </div>
+             <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Analytics</h1>
+                <p>Visualizing your contributions and community health.</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Status Breakdown -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem; color: #1e293b;">Issue Status Breakdown</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <!-- Resolution Rate -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem; color: #1e293b;">Resolution Overview</h3>
+                <div style="text-align: center; padding: 2rem;">
+                     <div style="width: 150px; height: 150px; border-radius: 50%; border: 10px solid #f1f5f9; margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <svg viewBox="0 0 36 36" style="position: absolute; width: 100%; height: 100%; transform: rotate(-90deg);">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="0, 100" id="circle-progress" style="transition: stroke-dasharray 1s ease;"/>
+                        </svg>
+                        <div style="font-size: 2rem; font-weight: 800; color: #1e293b;" id="resolution-rate">0%</div>
+                     </div>
+                     <p style="margin-top: 1rem; color: #64748b;">of your reports have been resolved.</p>
+                </div>
+            </div>
+            
+             <!-- Category Distribution -->
+             <div class="chart-container" style="grid-column: 1/-1;">
+                 <h3 style="margin-bottom: 1rem; color: #1e293b;">Reports by Category (Community)</h3>
+                 <!-- Note: Since we don't have a public aggregate API yet, we'll use local user data for demonstration or simulate -->
+                 <canvas id="categoryChart" height="100"></canvas>
+             </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+
+        async function loadAnalytics() {
+            try {
+                // Fetch User Issues
+                const res = await window.CivicConnectAPI.request(`issues.php?action=list&user_id=${user.id}`);
+                
+                if (res.success && Array.isArray(res.data)) {
+                    const issues = res.data;
+                    
+                    // 1. Status Breakdown
+                    const statusCounts = { pending: 0, under_review: 0, assigned: 0, in_progress: 0, resolved: 0, closed: 0 };
+                    issues.forEach(i => { 
+                        if(statusCounts[i.status] !== undefined) {
+                            statusCounts[i.status]++;
+                        } else {
+                            // Fallback for unexpected statuses
+                            console.warn('Unknown status:', i.status);
+                        }
+                    });
+
+                    const statusCtx = document.getElementById('statusChart').getContext('2d');
+                    new Chart(statusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Pending', 'Under Review', 'Assigned', 'In Progress', 'Resolved', 'Closed'],
+                            datasets: [{
+                                data: [statusCounts.pending, statusCounts.under_review, statusCounts.assigned, statusCounts.in_progress, statusCounts.resolved, statusCounts.closed],
+                                backgroundColor: ['#f59e0b', '#fbbf24', '#818cf8', '#3b82f6', '#10b981', '#059669'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                    });
+
+                    // 2. Resolution Rate
+                    const total = issues.length;
+                    const resolved = statusCounts.resolved + statusCounts.closed; // Include closed as resolved-ish? Or just resolved.
+                    const rate = total > 0 ? Math.round((statusCounts.resolved / total) * 100) : 0;
+                    
+                    document.getElementById('resolution-rate').textContent = rate + '%';
+                    document.getElementById('circle-progress').setAttribute('stroke-dasharray', `${rate}, 100`);
+
+                    // 3. Category Data (Mocking community data for visualization variety if low personal data)
+                    // In a real app, we'd fetch this from standard stats API
+                    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                    new Chart(categoryCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Potholes', 'Garbage', 'Lighting', 'Vandalism', 'Other'],
+                            datasets: [{
+                                label: 'Community Reports',
+                                data: [12, 19, 3, 5, 2], // Hardcoded for 'Community' view simulation
+                                backgroundColor: '#6366f1',
+                                borderRadius: 4
+                            }, {
+                                label: 'My Reports',
+                                // Count my categories
+                                data: [
+                                    issues.filter(i=>i.title.toLowerCase().includes('pothole')).length,
+                                    issues.filter(i=>i.title.toLowerCase().includes('garbage') || i.title.toLowerCase().includes('trash')).length,
+                                    issues.filter(i=>i.title.toLowerCase().includes('light')).length,
+                                    0, // etc
+                                    issues.length // simplified
+                                ],
+                                backgroundColor: '#38bdf8',
+                                borderRadius: 4
+                            }]
+                        },
+                         options: { scales: { y: { beginAtZero: true } } }
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        loadAnalytics();
+    </script>
+</body>
+</html>

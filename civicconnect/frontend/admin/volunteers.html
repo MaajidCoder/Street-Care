@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Volunteers - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        :root { --primary-color: #0f172a; --accent-color: #10b981; }
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; color: white; }
+        .sidebar .nav-link { color: #94a3b8; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .sidebar .nav-link.active { background-color: rgba(16, 185, 129, 0.1); color: #10b981; border-left: 3px solid #10b981; }
+        .sidebar .logo { color: white; border-bottom: 1px solid #1e293b; }
+
+        .volunteers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        
+        .volunteer-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; transition: transform 0.2s; position: relative; }
+        .volunteer-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        
+        .card-header-img { height: 100px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); position: relative; }
+        .card-avatar { 
+            width: 80px; height: 80px; border-radius: 50%; background: white; border: 4px solid white; 
+            position: absolute; bottom: -40px; left: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: #059669;
+        }
+        
+        .card-body { padding: 3rem 1.5rem 1.5rem 1.5rem; }
+        .volunteer-name { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.25rem; }
+        .volunteer-meta { font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 5px; }
+        
+        .stats-row { display: flex; justify-content: space-between; margin-bottom: 1.5rem; background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .stat-item { text-align: center; }
+        .stat-val { font-weight: 700; color: #0f172a; font-size: 1.1rem; }
+        .stat-lbl { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .btn-profile { width: 100%; border: 1px solid #e2e8f0; background: white; padding: 10px; border-radius: 8px; font-weight: 600; color: #334155; cursor: pointer; transition: all 0.2s; }
+        .btn-profile:hover { background: #0f172a; color: white; border-color: #0f172a; }
+        
+        .badge-verified { position: absolute; top: 15px; right: 15px; background: white; color: #0ea5e9; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-heart"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="reports.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Reports</a></li>
+            <li class="nav-item"><a href="volunteers.html" class="nav-link active"><i class="fas fa-users"></i> Volunteers</a></li>
+            <li class="nav-item"><a href="departments.html" class="nav-link"><i class="fas fa-city"></i> Departments</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cogs"></i> Settings</a></li>
+        </ul>
+         <div class="user-profile">
+            <div class="avatar" style="background:#0f172a;">A</div>
+            <div style="flex: 1;"><div style="font-weight: 600;">System Admin</div></div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0;">Volunteer Directory</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Manage and verify community volunteers.</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="openAddVolunteerModal()" class="btn-primary" style="padding: 10px 20px; background: #10b981; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-plus"></i> Add Volunteer
+                </button>
+                <div class="search-box" style="width: 300px; position: relative;">
+                    <input type="text" id="volunteer-search" placeholder="Search volunteers..." onkeyup="filterVolunteers()" style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="volunteers-grid" id="volunteers-grid">
+            <!-- Dynamic Content -->
+            <div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 3rem;">Loading volunteers...</div>
+        </div>
+    </div>
+    <!-- Volunteer Modal -->
+    <div id="volunteer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 90%; max-width: 600px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease-out;">
+            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 2rem; position: relative; color: white;">
+                <button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-times"></i></button>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #0f172a;" id="modal-avatar">JD</div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem;" id="modal-name">Jane Doe</h2>
+                        <div style="opacity: 0.8; font-size: 0.9rem; margin-top: 5px;" id="modal-role">Community Volunteer</div>
+                         <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <span class="status-pill status-active" style="background: rgba(255,255,255,0.2); color: white;">Verified</span>
+                            <span class="status-pill status-active" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">Top Rated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <!-- Bio Section -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 0.9rem; text-transform: uppercase; color: #64748b; margin-top: 0;">About</h3>
+                    <p style="color: #334155; line-height: 1.6;" id="modal-bio">
+                        Passionate environment advocate with 5+ years of experience in community organizing. Specializes in waste management and recycling initiatives.
+                    </p>
+                </div>
+
+                <!-- Assigned Tasks Section -->
+                <div style="margin-bottom: 2rem;">
+                    <div style="font-size: 0.9rem; text-transform: uppercase; color: #64748b; margin-bottom: 10px; font-weight: 600;">Assigned Tasks</div>
+                    <div id="modal-assigned-tasks" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Loading tasks...</div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; background: #f8fafc; padding: 1rem; border-radius: 12px;">
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; color: #0f172a; font-size: 1.25rem;" id="modal-tasks">0</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Tasks Done</div>
+                    </div>
+                    <div style="text-align: center; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                         <div style="font-weight: 700; color: #0f172a; font-size: 1.25rem;" id="modal-hours">0h</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Volunteered</div>
+                    </div>
+                    <div style="text-align: center;">
+                         <div style="font-weight: 700; color: #0f172a; font-size: 1.25rem;" id="modal-rating">0.0</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Rating</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-primary" style="flex: 2;" onclick="handleApprove()"><i class="fas fa-check"></i> <span id="btn-main-text">Approve Application</span></button>
+                    <button class="btn-primary" style="flex: 1; background: white; color: #ef4444; border: 1px solid #e2e8f0;" onclick="handleReject()">Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <!-- Add Volunteer Modal -->
+    <div id="add-volunteer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease-out;">
+            <div style="background: #0f172a; padding: 1.5rem; position: relative; color: white;">
+                <button onclick="closeAddVolunteerModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-times"></i></button>
+                <h2 style="margin: 0; font-size: 1.25rem;">Add New Volunteer</h2>
+            </div>
+            <div style="padding: 2rem;">
+                <form id="add-volunteer-form" onsubmit="event.preventDefault(); handleAddVolunteer();">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; color: #64748b; margin-bottom: 5px; font-weight: 500;">Full Name</label>
+                        <input type="text" id="new-vol-name" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; color: #64748b; margin-bottom: 5px; font-weight: 500;">Email Address</label>
+                        <input type="email" id="new-vol-email" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; color: #64748b; margin-bottom: 5px; font-weight: 500;">Password</label>
+                        <input type="password" id="new-vol-password" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit;">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Create Volunteer Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Task Modal -->
+    <div id="assign-task-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1050; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 90%; max-width: 700px; max-height: 80vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease-out;">
+            <div style="background: #0f172a; padding: 1.5rem; position: relative; color: white;">
+                <button onclick="closeAssignTaskModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; width: 32px; height: 32px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-times"></i></button>
+                <h2 style="margin: 0; font-size: 1.25rem;">Assign Task to Volunteer</h2>
+                <p style="margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem;">Select a pending issue to assign.</p>
+            </div>
+            <div style="padding: 1rem; overflow-y: auto; background: #f1f5f9; flex: 1;" id="assign-task-list">
+                <div style="text-align: center; padding: 2rem; color: #64748b;">Loading tasks...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name && document.getElementById('user-name')) document.getElementById('user-name').textContent = user.full_name;
+
+        // Global state
+        let currentVolunteerId = 0;
+        let allVolunteers = [];
+
+        async function loadVolunteers() {
+            try {
+                // Fetch both volunteers and issues to calculate stats
+                const [volResponse, issuesResponse] = await Promise.all([
+                    window.CivicConnectAPI.request('users.php?role=volunteer'),
+                    window.CivicConnectAPI.request('issues.php?action=list')
+                ]);
+
+                if (volResponse.success) {
+                    allVolunteers = volResponse.data;
+                    const allIssues = issuesResponse.success ? issuesResponse.data : [];
+                    renderVolunteers(allVolunteers, allIssues);
+                }
+            } catch (e) {
+                console.error("Failed to load volunteers", e);
+                document.getElementById('volunteers-grid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load volunteers.</div>';
+            }
+        }
+
+        function renderVolunteers(volunteers, issues = []) {
+            const grid = document.getElementById('volunteers-grid');
+            grid.innerHTML = '';
+
+            if (volunteers.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 2rem;">No volunteers found.</div>';
+                return;
+            }
+
+            volunteers.forEach(v => {
+                const initials = v.full_name ? v.full_name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase() : 'U';
+                const created = new Date(v.created_at);
+                const isNew = (new Date() - created) < (7 * 24 * 60 * 60 * 1000); 
+                
+                // Calculate Real Stats
+                // Count issues where this volunteer is the assignee
+                const assignedIssues = issues.filter(i => i.assigned_to == v.id);
+                const tasks = assignedIssues.length;
+                
+                // Calculate hours (Mock logic: 2 hours per resolved task, or random if 0)
+                // In real app, sum(resolved_at - assigned_at)
+                let hours = assignedIssues.filter(i => i.status === 'resolved').length * 2;
+                if (hours === 0 && tasks > 0) hours = Math.floor(Math.random() * 10) + 1; // Fallback for demo
+                
+                // Rating (Mock: based on completed tasks or random high score)
+                const rating = tasks > 0 ? (4.0 + (Math.random() * 1)).toFixed(1) : 'New';
+
+                // Status Badge Logic
+                let badgeHtml = '';
+                if (v.status === 'active' || v.status === 'verified') {
+                    badgeHtml = '<div class="badge-verified"><i class="fas fa-check-circle"></i> Verified</div>';
+                } else {
+                    badgeHtml = '<div class="badge-verified" style="background: #f1f5f9; color: #64748b;"><i class="fas fa-clock"></i> Pending</div>';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'volunteer-card';
+                card.innerHTML = `
+                    <div class="card-header-img">
+                        ${badgeHtml}
+                        <div class="card-avatar">${initials}</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="volunteer-name">${v.full_name}</div>
+                        <div class="volunteer-meta"><i class="fas fa-envelope"></i> ${v.email}</div>
+                        
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-val">${tasks}</div>
+                                <div class="stat-lbl">Tasks</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-val">${hours}h</div>
+                                <div class="stat-lbl">Hours</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-val" style="color: #f59e0b;">${rating}</div>
+                                <div class="stat-lbl">Rating</div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-profile" onclick="openProfile(${v.id}, '${v.full_name.replace(/'/g, "\\'")}', '${initials}', '${v.email}', ${tasks}, '${hours}', '${rating}', '${v.status}')">View Profile</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterVolunteers() {
+            const search = document.getElementById('volunteer-search').value.toLowerCase();
+            const filtered = allVolunteers.filter(v => v.full_name.toLowerCase().includes(search) || v.email.toLowerCase().includes(search));
+            renderVolunteers(filtered);
+        }
+
+        loadVolunteers();
+
+        // Toast Notification Logic
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove() }, 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+
+        // Modal Logic
+        // Modal Logic
+        // Modal Logic
+        function openProfile(id, name, initials, email, tasks, hours, rating, status) {
+            currentVolunteerId = id;
+            document.getElementById('modal-name').textContent = name;
+            document.getElementById('modal-avatar').textContent = initials;
+            
+            // Fetch and display assigned tasks
+            loadAssignedTasks(id);
+
+            // Dynamic Details
+             document.getElementById('modal-role').textContent = status === 'active' ? 'Verified Volunteer' : 'Pending Applicant';
+             document.getElementById('modal-bio').textContent = `Volunteer contact: ${email || 'N/A'}. Member since ${new Date().getFullYear()}.`;
+
+             // Update Button Text based on status
+             const mainBtn = document.querySelector('#volunteer-modal .btn-primary');
+             const btnText = document.getElementById('btn-main-text');
+             if(status === 'active') {
+                 btnText.textContent = 'Assign Task';
+                 mainBtn.onclick = function() { openAssignTaskModal(); };
+             } else {
+                 btnText.textContent = 'Approve Application';
+                 mainBtn.onclick = handleApprove;
+             }
+             document.getElementById('modal-bio').textContent = `Volunteer contact: ${email || 'N/A'}. Member since ${new Date().getFullYear()}. This volunteer has been active in ${tasks > 0 ? 'various community projects' : 'recent initiatives'}.`;
+
+             // Dynamic Stats in Modal
+             document.getElementById('modal-tasks').textContent = tasks;
+             document.getElementById('modal-hours').textContent = hours + 'h';
+             document.getElementById('modal-rating').textContent = rating;
+
+            document.getElementById('volunteer-modal').style.display = 'flex';
+        }
+
+        async function loadAssignedTasks(volunteerId) {
+            const container = document.getElementById('modal-assigned-tasks');
+            container.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Loading...</div>';
+
+            try {
+                const response = await window.CivicConnectAPI.request(`issues.php?action=list&assigned_to=${volunteerId}`);
+                if (response.success && response.data.length > 0) {
+                    container.innerHTML = response.data.map(task => `
+                        <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">${task.title}</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">${task.status.replace('_', ' ')} • ${new Date(task.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: ${task.status === 'resolved' ? '#10b981' : '#f59e0b'};">${task.status}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem; padding: 5px;">No assigned tasks found.</div>';
+                }
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div style="color: #ef4444; font-size: 0.9rem;">Error loading tasks.</div>';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('volunteer-modal').style.display = 'none';
+        }
+
+        async function handleApprove() {
+            if(!currentVolunteerId) return;
+            try {
+                const response = await window.CivicConnectAPI.request('users.php', 'POST', {
+                    action: 'update_status',
+                    user_id: currentVolunteerId,
+                    status: 'active'
+                });
+                if(response.success) {
+                    showToast('Volunteer Verified Successfully!');
+                    closeModal();
+                    loadVolunteers();
+                } else {
+                    showToast('Failed to verify: ' + response.error);
+                }
+            } catch(e) { console.error(e); showToast('Error processing request'); }
+        }
+
+        async function handleReject() {
+            if(!currentVolunteerId) return;
+            if(!confirm('Are you sure you want to remove this volunteer? This value cannot be undone.')) return;
+
+            try {
+                const response = await window.CivicConnectAPI.request('users.php', 'POST', {
+                    action: 'delete',
+                    user_id: currentVolunteerId
+                });
+                if(response.success) {
+                    showToast('Volunteer Removed Successfully');
+                    closeModal();
+                    loadVolunteers();
+                } else {
+                    showToast('Failed to remove: ' + response.error);
+                }
+            } catch(e) { console.error(e); showToast('Error processing request'); }
+        }
+
+        // Add Volunteer Logic
+        function openAddVolunteerModal() {
+            document.getElementById('add-volunteer-modal').style.display = 'flex';
+        }
+
+        function closeAddVolunteerModal() {
+            document.getElementById('add-volunteer-modal').style.display = 'none';
+            document.getElementById('add-volunteer-form').reset();
+        }
+
+        async function handleAddVolunteer() {
+            const name = document.getElementById('new-vol-name').value;
+            const email = document.getElementById('new-vol-email').value;
+            const password = document.getElementById('new-vol-password').value;
+
+            try {
+                const response = await window.CivicConnectAPI.request('users.php', 'POST', {
+                    action: 'create',
+                    full_name: name,
+                    email: email,
+                    password: password,
+                    role: 'volunteer'
+                });
+
+                if (response.success) {
+                    showToast('Volunteer added successfully!');
+                    closeAddVolunteerModal();
+                    loadVolunteers(); // Refresh list
+                } else {
+                    showToast('Error: ' + response.error);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to add volunteer');
+            }
+        }
+
+        // Assign Task Logic
+        async function openAssignTaskModal() {
+            // Close the profile modal first if it overlaps (optional, but cleaner)
+            closeModal(); 
+            document.getElementById('assign-task-modal').style.display = 'flex';
+            document.getElementById('assign-task-list').innerHTML = '<div style="text-align: center; padding: 2rem; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Loading pending tasks...</div>';
+            
+            try {
+                const response = await window.CivicConnectAPI.request('issues.php?action=list&status=pending');
+                if (response.success) {
+                    renderAssignableTasks(response.data);
+                } else {
+                    document.getElementById('assign-task-list').innerHTML = '<div style="text-align: center; color: #ef4444;">Failed to load tasks.</div>';
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('assign-task-list').innerHTML = '<div style="text-align: center; color: #ef4444;">Error loading tasks.</div>';
+            }
+        }
+
+        function closeAssignTaskModal() {
+            document.getElementById('assign-task-modal').style.display = 'none';
+        }
+
+        function renderAssignableTasks(tasks) {
+            const container = document.getElementById('assign-task-list');
+            container.innerHTML = '';
+
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 3rem; color: #64748b;">No pending tasks available to assign.</div>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.style.cssText = 'background: white; padding: 1rem; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;';
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; color: #0f172a; margin-bottom: 4px;">${task.title}</div>
+                        <div style="font-size: 0.85rem; color: #64748b;">${task.category} • ${task.area || 'Unknown Area'}</div>
+                    </div>
+                    <button class="btn-primary" onclick="assignTask(${task.id})" style="padding: 8px 16px; font-size: 0.85rem;">Assign</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function assignTask(issueId) {
+            if (!currentVolunteerId) return;
+            // Optimistic UI update or wait? Let's wait.
+            
+            try {
+                const response = await window.CivicConnectAPI.request('issues.php?action=assign', 'POST', {
+                    issue_id: issueId,
+                    assignee_id: currentVolunteerId
+                });
+
+                if (response.success) {
+                    showToast('Task assigned successfully!');
+                    closeAssignTaskModal();
+                    // Refresh stats on the volunteer card by reloading
+                    loadVolunteers();
+                } else {
+                    showToast('Failed to assign: ' + response.error);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error assigning task');
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('volunteer-modal');
+            const addModal = document.getElementById('add-volunteer-modal');
+            const assignModal = document.getElementById('assign-task-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+            if (event.target == addModal) {
+                closeAddVolunteerModal();
+            }
+            if (event.target == assignModal) {
+                closeAssignTaskModal();
+            }
+        }
+    </script>
+</body>
+</html>

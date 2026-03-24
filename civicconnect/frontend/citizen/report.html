@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Issue - CivicConnect</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .page-container { max-width: 800px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <button onclick="window.CivicConnectAPI.logout()" style="background: white; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+    <div class="page-container">
+        <h2>Report an Issue</h2>
+        <form id="report-form" style="margin-top: 20px;">
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="title" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category" required>
+                    <option value="garbage_waste">Garbage & Waste</option>
+                    <option value="road_infrastructure">Roads</option>
+                    <option value="street_lighting">Lighting</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Area</label>
+                <input type="text" id="area" required>
+            </div>
+            <div class="form-group">
+                <label>Location / Address</label>
+                <input type="text" id="address" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="description" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Submit Report</button>
+            <a href="dashboard.html" style="display:block; margin-top:15px; text-align:center;">Cancel</a>
+        </form>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        document.getElementById('report-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                area: document.getElementById('area').value,
+                address: document.getElementById('address').value,
+                description: document.getElementById('description').value
+            };
+            
+            try {
+                const res = await window.CivicConnectAPI.createIssue(data);
+                if (res.success) {
+                    alert('Issue reported successfully!');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert(res.error || 'Failed to report issue');
+                }
+            } catch (err) {
+                alert('Error processing request');
+            }
+        });
+    </script>
+</body>
+</html>

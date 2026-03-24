@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        .task-card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3b82f6; }
+        .task-info h4 { margin: 0 0 0.5rem 0; color: #1e293b; }
+        .task-info p { margin: 0; color: #64748b; font-size: 0.9rem; }
+        .task-meta { margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; display: flex; gap: 10px; }
+        .btn-complete { background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .btn-complete:hover { background: #059669; }
+        .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+    </style>
+</head>
+<body class="theme-volunteer">
+    <div class="sidebar">
+        <div class="logo"><i class="fas fa-hands-helping"></i> Street Care</div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="find_tasks.html" class="nav-link"><i class="fas fa-search-location"></i> Find Tasks</a></li>
+            <li class="nav-item"><a href="my_tasks.html" class="nav-link active"><i class="fas fa-tasks"></i> My Assignments</a></li>
+            <li class="nav-item"><a href="my_impact.html" class="nav-link"><i class="fas fa-chart-pie"></i> My Impact</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link"><i class="fas fa-user-circle"></i> Profile</a></li>
+        </ul>
+        <!-- Profile in Sidebar -->
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar" style="background: #10b981;">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #a7f3d0;">Volunteer</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a7f3d0;"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h2 style="margin:0;">My Assignments</h2>
+                <p style="color: #64748b; margin:0;">Track and complete your volunteer tasks.</p>
+            </div>
+        </div>
+
+        <div id="tasks-container">
+            <p>Loading your tasks...</p>
+        </div>
+    </div>
+    
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        const container = document.getElementById('toast-container');
+        
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `background: ${type === 'success' ? '#10b981' : '#ef4444'}; color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        async function loadMyTasks() {
+            try {
+                const res = await window.CivicConnectAPI.request(`volunteers_backend.php?action=my_tasks&user_id=${user.id}`);
+                const list = document.getElementById('tasks-container');
+                
+                if (res.success && res.data && res.data.length > 0) {
+                    const activeTasks = res.data.filter(t => t.status === 'in_progress' || t.status === 'assigned');
+                    
+                    if(activeTasks.length === 0) {
+                         list.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i><h3>No active tasks</h3><p>You have no pending assignments. <a href="find_tasks.html" style="color: #10b981;">Find new tasks</a></p></div>`;
+                         return;
+                    }
+
+                    list.innerHTML = activeTasks.map(task => `
+                        <div class="task-card">
+                            <div class="task-info">
+                                <h4>${task.title}</h4>
+                                <p>${task.description}</p>
+                                <div class="task-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> ${task.area}</span>
+                                    <span><i class="fas fa-calendar-alt"></i> ${new Date(task.assigned_at || Date.now()).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <button class="btn-complete" onclick="completeTask(${task.id}, this)">
+                                <i class="fas fa-check"></i> Mark Complete
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i><h3>No active tasks</h3><p>You have no pending assignments. <a href="find_tasks.html" style="color: #10b981;">Find new tasks</a></p></div>`;
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('tasks-container').innerHTML = '<p style="color: red; text-align: center;">Error loading tasks.</p>';
+            }
+        }
+
+        async function completeTask(issueId, btn) {
+            if(!confirm('Are you sure you have completed this task?')) return;
+            
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+            btn.disabled = true;
+            
+            try {
+                const res = await window.CivicConnectAPI.request('volunteers_backend.php?action=complete_task', 'POST', {
+                    issue_id: issueId,
+                    user_id: user.id
+                });
+                
+                if(res.success) {
+                    showToast('Task marked as completed! Great job!');
+                    btn.closest('.task-card').style.opacity = '0.5';
+                    btn.closest('.task-card').style.pointerEvents = 'none';
+                    setTimeout(loadMyTasks, 1500);
+                } else {
+                    showToast('Error: ' + res.error, 'error');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                showToast('Connection error', 'error');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        loadMyTasks();
+    </script>
+</body>
+</html>

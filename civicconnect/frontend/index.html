@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Street Care - Empowering Communities</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #0f172a;
+            --accent: #38bdf8;
+            --wh: #ffffff;
+            --text-main: #334155;
+            --text-light: #94a3b8;
+            --grad-1: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--secondary);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn-nav {
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-login {
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            margin-right: 1rem;
+        }
+
+        .btn-signup {
+            background: var(--grad-1);
+            color: white;
+            border: none;
+        }
+
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            background: radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(255, 255, 255) 90%);
+            position: relative;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+
+        .hero-shape {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: var(--grad-1);
+            border-radius: 50%;
+            top: -100px;
+            right: -100px;
+            opacity: 0.05;
+            filter: blur(80px);
+            z-index: 0;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+            background: var(--grad-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-main);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 600px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Features */
+        .features {
+            padding: 8rem 5%;
+            text-align: center;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 4rem auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            border-bottom: 4px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-bottom-color: var(--primary);
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: #eff6ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        /* Roles Section */
+        .roles {
+            background: white;
+            padding: 8rem 5%;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .role-card {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: 0.3s;
+        }
+
+        .role-card:hover {
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-color: var(--primary);
+        }
+
+        .role-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* Stats */
+        .stats {
+            background: var(--secondary);
+            padding: 5rem 5%;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: #0b1120;
+            color: #94a3b8;
+            padding: 4rem 5% 2rem 5%;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand h2 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #1e293b;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 120px; }
+            .hero-content { margin-bottom: 3rem; }
+            .hero-btns { justify-content: center; }
+            .role-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .nav-links { display: none; }
+            .role-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.8rem; }
+        }
+        /* Dropdown Styles */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            background: #ffffff;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 16px;
+            min-width: 240px;
+            padding: 8px;
+            z-index: 10001;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .dropdown-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-content a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .dropdown-content a:hover {
+            background: #eff6ff;
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        .dropdown-content a i {
+            width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-light);
+            transition: color 0.2s;
+        }
+
+        .dropdown-content a:hover i {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="logo" style="text-decoration: none;">
+            <i class="fas fa-heart"></i> Street Care
+        </a>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#roles">Who It's For</a></li>
+            <li><a href="#stats">Impact</a></li>
+        </ul>
+        <div class="nav-btns">
+            <!-- Dropdown for Login -->
+            <div style="display: inline-block; position: relative;" id="login-container">
+                <button id="login-btn" class="btn-nav btn-login" style="cursor: pointer;">
+                    Login <i class="fas fa-chevron-down"></i>
+                </button>
+                <div id="login-dropdown" class="dropdown-content">
+                    <div style="padding: 8px 16px; font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Select Portal</div>
+                    <a href="auth/login_citizen.html">
+                        <i class="fas fa-user"></i> Citizen Login
+                    </a>
+                    <a href="auth/login_volunteer.html">
+                        <i class="fas fa-hands-helping"></i> Volunteer Login
+                    </a>
+                    <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
+                    <a href="auth/login_admin.html">
+                        <i class="fas fa-shield-alt"></i> Admin / Authority
+                    </a>
+                </div>
+            </div>
+            
+            <a href="auth/register.html" class="btn-nav btn-signup">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="home">
+        <div class="hero-shape"></div>
+        <div class="hero-content" data-aos="fade-up">
+            <h1>Caring for our <br><span>Streets</span> Together</h1>
+            <p>The all-in-one platform connecting Citizens, Volunteers, and Authorities. Report issues, take action, and drive real change in your neighborhood with Street Care.</p>
+            <div class="hero-btns">
+                <a href="auth/register.html" class="btn-nav btn-signup">Join the Cause</a>
+                <a href="#features" class="btn-nav btn-login">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image" data-aos="fade-left">
+            <!-- Updated Image: Volunteers working together -->
+            <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Volunteers in Action" style="border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        // Toggle Dropdown
+        const loginBtn = document.getElementById('login-btn');
+        const loginDropdown = document.getElementById('login-dropdown');
+        const loginContainer = document.getElementById('login-container');
+
+        loginBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            loginDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!loginContainer.contains(e.target)) {
+                loginDropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="section-title" data-aos="fade-up">
+            <h2>Why Choose Street Care?</h2>
+            <p>Empowerment tools for every stakeholder in the city ecosystem.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="icon-box"><i class="fas fa-bullhorn"></i></div>
+                <h3>Easy Reporting</h3>
+                <p>Snap a photo, tag a location, and report civic issues in seconds. Track progress in real-time.</p>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="icon-box"><i class="fas fa-hands-helping"></i></div>
+                <h3>Community Action</h3>
+                <p>Join hands with volunteers to fix local problems. Earn badges and recognition for your impact.</p>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="icon-box"><i class="fas fa-chart-line"></i></div>
+                <h3>Smart Governance</h3>
+                <p>Authorities get a bird's-eye view of issues with heatmaps and analytics for faster resolution.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roles -->
+    <section class="roles" id="roles">
+        <div class="section-title">
+            <h2>One Platform, Four Roles</h2>
+            <p>Tailored experiences for everyone involved.</p>
+        </div>
+        <div class="role-grid">
+            <div class="role-card" data-aos="flip-left">
+                <i class="fas fa-user role-icon"></i>
+                <h3>Citizens</h3>
+                <p>Report & Track issues near you.</p>
+            </div>
+            <div class="role-card" data-aos="flip-left" data-aos-delay="100">
+                <i class="fas fa-tshirt role-icon"></i>
+                <h3>Volunteers</h3>
+                <p>Find tasks & help the community.</p>
+            </div>
+            <div class="role-card" data-aos="flip-left" data-aos-delay="200">
+                <i class="fas fa-university role-icon"></i>
+                <h3>Authority</h3>
+                <p>Manage infrastructure & teams.</p>
+            </div>
+            <div class="role-card" data-aos="flip-left" data-aos-delay="300">
+                <i class="fas fa-user-shield role-icon"></i>
+                <h3>Admin</h3>
+                <p>Oversee users & system health.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats" id="stats">
+        <div class="stat-item" data-aos="zoom-in">
+            <div class="stat-number">5k+</div>
+            <div>Issues Resolved</div>
+        </div>
+        <div class="stat-item" data-aos="zoom-in" data-aos-delay="100">
+            <div class="stat-number">1.2k</div>
+            <div>Active Volunteers</div>
+        </div>
+        <div class="stat-item" data-aos="zoom-in" data-aos-delay="200">
+            <div class="stat-number">50+</div>
+            <div>Cities Covered</div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h2>Street Care</h2>
+                <p>Making cities smarter, safer, and cleaner through community collaboration.</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <p><a href="#" style="color:#94a3b8; text-decoration:none;">About Us</a></p>
+                <p><a href="#" style="color:#94a3b8; text-decoration:none;">Contact</a></p>
+                <p><a href="#" style="color:#94a3b8; text-decoration:none;">Privacy Policy</a></p>
+            </div>
+            <div>
+                <h4>Contact</h4>
+                <p>support@civicconnect.com</p>
+                <p>+1 (555) 123-4567</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Street Care. All rights reserved.</p>
+        </div>
+    </footer>
+
+</html>

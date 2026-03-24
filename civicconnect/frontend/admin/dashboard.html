@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Street Care</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        /* Admin Theme Overrides */
+        :root { 
+            --primary-color: #0f172a; 
+            --primary-light: #334155;
+            --accent-color: #3b82f6;
+        }
+
+        .sidebar { background: #0f172a; border-right: 1px solid #1e293b; color: white; }
+        .sidebar .nav-link { color: #94a3b8; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .sidebar .nav-link.active { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left-color: #60a5fa; }
+        
+        .sidebar .logo { color: white; font-size: 1.4rem; border-bottom: 1px solid #1e293b; }
+        .sidebar .logo i { color: #60a5fa; }
+
+        .user-profile { border-top: 1px solid #1e293b; background: rgba(0,0,0,0.2); }
+        .avatar { background-color: #3b82f6; color: white; }
+
+        /* KPI Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        .stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        
+        .icon-blue { background: #eff6ff; color: #3b82f6; }
+        .icon-green { background: #ecfdf5; color: #10b981; }
+        .icon-purple { background: #f5f3ff; color: #8b5cf6; }
+        .icon-orange { background: #fff7ed; color: #f97316; }
+
+        .stat-value { font-size: 2rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+        .stat-label { color: #64748b; font-size: 0.9rem; font-weight: 500; }
+        .stat-trend { font-size: 0.85rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 5px; }
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+
+        /* Tables & Lists */
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .section-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { text-align: left; padding: 1rem; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 0.95rem; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef9c3; color: #854d0e; }
+        
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+        .user-cell img { width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-heart"></i> Street Care
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="reports.html" class="nav-link">
+                    <i class="fas fa-clipboard-list"></i> Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="volunteers.html" class="nav-link">
+                    <i class="fas fa-users"></i> Volunteers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="departments.html" class="nav-link">
+                    <i class="fas fa-city"></i> Departments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cogs"></i> Settings
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="avatar" style="background:#0f172a;">A</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600;" id="user-name">Administrator</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Super Admin</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #94a3b8;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Platform Overview</h1>
+                <p>Welcome back, Admin. Here's what's happening in your city today.</p>
+            </div>
+            <button class="btn-primary" onclick="downloadReport()">
+                <i class="fas fa-download"></i> Download Report
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Total Reports</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Active Volunteers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Pending Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-purple">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Resolution Rate</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <!-- Recent Reports Table -->
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <div class="card-header">
+                    <h3 class="section-title">Recent Flagged Reports</h3>
+                    <a href="#" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View All</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-reports-body">
+                        <!-- Content loaded dynamically -->
+                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- New Volunteers List -->
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <div class="card-header">
+                    <h3 class="section-title">New Volunteers</h3>
+                </div>
+                <div id="new-volunteers-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Content will be loaded dynamically -->
+                    <div style="text-align: center; color: #94a3b8; padding: 1rem;">Loading...</div>
+                </div>
+                <!-- View All Users Button functional now -->
+    <button class="btn-primary" style="width: 100%; margin-top: 1.5rem; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;" onclick="window.location.href='users.html'">View All Users</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Modal -->
+    <div id="tracking-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: white; width: 90%; max-width: 700px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease-out;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <div>
+                    <h2 style="margin: 0; color: #0f172a; font-size: 1.25rem;">Report Tracking</h2>
+                    <div style="font-size: 0.85rem; color: #64748b;" id="modal-report-id">#RP-2024-001</div>
+                </div>
+                <button onclick="closeModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="padding: 2rem; display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+                <!-- Timeline Section -->
+                <div>
+                    <h3 style="margin-top: 0; font-size: 1rem; color: #334155; margin-bottom: 1.5rem;">Status Timeline</h3>
+                    <div class="timeline" style="border-left: 2px solid #e2e8f0; padding-left: 1.5rem; margin-left: 10px;">
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                            <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid white; box-shadow: 0 0 0 2px #10b981;"></div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">Issue Reported</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Today, 9:41 AM</div>
+                        </div>
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                             <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 2px solid white; box-shadow: 0 0 0 2px #3b82f6;"></div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">Under Review</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Today, 10:15 AM • Assigned to <span style="color: #3b82f6;">Sarah Jenkins</span></div>
+                        </div>
+                         <div style="position: relative;">
+                             <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; border: 2px solid white;"></div>
+                            <div style="font-weight: 600; color: #94a3b8; font-size: 0.95rem;">Resolution in Progress</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Pending Action</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Section -->
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Category</div>
+                        <div style="font-weight: 600; color: #0f172a;" id="modal-category">Hazardous Waste</div>
+                    </div>
+                     <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Location</div>
+                        <div style="font-weight: 600; color: #0f172a;">Downtown District</div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Priority</div>
+                        <div style="display: inline-block; background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-top: 4px;" id="modal-priority">HIGH</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 5px;">Update Status</div>
+                        <select id="modal-status-select" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="pending">Pending</option>
+                            <option value="under_review">Under Review</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="updateStatus()">Update Status</button>
+                    <button class="btn-primary" style="width: 100%; background: white; color: #334155; border: 1px solid #e2e8f0;" onclick="closeModal()">Close Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if(user.full_name) document.getElementById('user-name').textContent = user.full_name;
+
+        // Logout button is already present in user-profile section
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; font-weight: 500;`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove() }, 3000);
+        }
+
+        // Add keyframe animations
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+
+        let currentReportId = 0;
+
+        async function reviewReport(id) {
+            // ID might be passed as string "#RP..." or number. 
+            // In the HTML table it is currently a string '#RP-...' but standard API uses int ID.
+            // We need to fix the table generation to pass actual IDs or parsing.
+            // For now, let's assume if it starts with # rp is fake data, so we need to fetch real data for the table first? 
+            // OR we just handle the ID passed. 
+            
+            // Wait, the table currently has hardcoded rows. We should first make the table dynamic.
+            // But to fix the user issue immediately for "update not changing", I'll implement the logic 
+            // assuming the ID passed is valid or I will parse it if it's from the static table (which won't work with API).
+            // Actually, the user says "when I click update it's not changing", suggesting they might be clicking the hardcoded ones.
+            // I should probably load real data into the table first so clicking works on real items.
+            
+            // Let's implement the fetching logic here assuming we will fix the table population next.
+            alert("Please wait, implementing dynamic table to support real updates.");
+            return;
+        }
+
+        // We need to populate the table with real data first to get real IDs.
+        // Replacing the hardcoded table generation with fetch logic.
+        async function loadReports() {
+             try {
+                const res = await window.CivicConnectAPI.getIssues(); // Default fetches all
+                const tbody = document.querySelector('tbody');
+                
+                if (res.success && res.data.length > 0) {
+                    tbody.innerHTML = res.data.map(report => `
+                        <tr>
+                            <td>#${report.id}</td>
+                            <td style="font-weight: 500;">${report.category ? report.category.replace('_', ' ') : 'General'}</td>
+                            <td>${report.area || report.location_address || 'Unknown'}</td>
+                            <td><span class="status-pill status-${report.status}">${report.status}</span></td>
+                            <td><button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="openReviewModal(${report.id})">Review</button></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No reports found</td></tr>';
+                }
+             } catch(e) { console.error(e); }
+        }
+
+        async function openReviewModal(id) {
+            currentReportId = id;
+            document.getElementById('modal-report-id').textContent = '#' + id;
+            
+            try {
+                const res = await window.CivicConnectAPI.request(`issues.php?action=details&id=${id}`);
+                if (res.success) {
+                    const issue = res.issue;
+                    document.getElementById('modal-category').textContent = issue.category;
+                    document.getElementById('modal-priority').textContent = issue.priority;
+                    document.getElementById('modal-status-select').value = issue.status;
+                    
+                    // Specific location logic if needed
+                    // document.getElementById('modal-location').textContent = issue.area;
+
+                    // Generate Dynamic Timeline
+                    const timelineContainer = document.querySelector('.timeline');
+                    timelineContainer.innerHTML = ''; // Clear static content
+
+                    // Step 1: Reported (Always true)
+                    const dateReported = new Date(issue.created_at).toLocaleString();
+                    let timelineHTML = `
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                            <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid white; box-shadow: 0 0 0 2px #10b981;"></div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">Issue Reported</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">${dateReported}</div>
+                        </div>
+                    `;
+
+                    // Step 2: Under Review / Assigned
+                    const isAssigned = issue.assigned_to || ['assigned', 'in_progress', 'resolved', 'closed'].includes(issue.status);
+                    const dateAssigned = issue.assigned_at ? new Date(issue.assigned_at).toLocaleString() : 'Pending Assignment';
+                    const activeAssigned = isAssigned ? '#3b82f6' : '#cbd5e1';
+                    
+                    timelineHTML += `
+                        <div style="position: relative; margin-bottom: 1.5rem;">
+                            <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: ${activeAssigned}; border: 2px solid white; ${isAssigned ? 'box-shadow: 0 0 0 2px ' + activeAssigned + ';' : ''}"></div>
+                            <div style="font-weight: 600; color: ${isAssigned ? '#0f172a' : '#94a3b8'}; font-size: 0.95rem;">Under Review / Assigned</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">${isAssigned ? dateAssigned : 'Waiting for team'}</div>
+                        </div>
+                    `;
+
+                    // Step 3: Resolution
+                    const isResolved = ['resolved', 'closed'].includes(issue.status);
+                    const activeResolved = isResolved ? '#10b981' : '#cbd5e1';
+                    const dateResolved = issue.resolved_at ? new Date(issue.resolved_at).toLocaleString() : 'Pending Action';
+
+                    timelineHTML += `
+                         <div style="position: relative;">
+                             <div style="position: absolute; left: -31px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: ${activeResolved}; border: 2px solid white; ${isResolved ? 'box-shadow: 0 0 0 2px ' + activeResolved + ';' : ''}"></div>
+                            <div style="font-weight: 600; color: ${isResolved ? '#0f172a' : '#94a3b8'}; font-size: 0.95rem;">Resolution</div>
+                            <div style="font-size: 0.8rem; color: ${isResolved ? '#64748b' : '#94a3b8'};">${isResolved ? 'Resolved on ' + dateResolved : 'Resolution in progress'}</div>
+                        </div>
+                    `;
+                    
+                    timelineContainer.innerHTML = timelineHTML;
+
+                    document.getElementById('tracking-modal').style.display = 'flex';
+                }
+            } catch(e) {
+                console.error(e);
+                showToast('Error loading details', 'error');
+            }
+        }
+
+        function downloadReport() {
+            showToast('Generating report...');
+            
+            window.CivicConnectAPI.getIssues().then(res => {
+                if (res.success && res.data.length > 0) {
+                    const items = res.data;
+                    const replacer = (key, value) => value === null ? '' : value; 
+                    const header = Object.keys(items[0]);
+                    const csv = [
+                        header.join(','), 
+                        ...items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+                    ].join('\r\n');
+
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('hidden', '');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', 'street_care_reports.csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast('Report downloaded successfully');
+                } else {
+                    showToast('No data available to download', 'error');
+                }
+            }).catch(e => {
+                console.error(e);
+                showToast('Error generating report', 'error');
+            });
+        }
+
+        async function updateStatus() {
+            const newStatus = document.getElementById('modal-status-select').value;
+            const btn = document.querySelector('button[onclick="updateStatus()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Updating...';
+            btn.disabled = true;
+
+            try {
+                const res = await window.CivicConnectAPI.request('issues.php?action=update', 'POST', {
+                    id: currentReportId,
+                    status: newStatus
+                });
+
+                if (res.success) {
+                    showToast('Status Updated Successfully');
+                    closeModal();
+                    loadReports(); // Refresh table
+                } else {
+                    showToast('Update failed: ' + res.error);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error updating status');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('tracking-modal').style.display = 'none';
+        }
+
+        // Init
+        loadReports();
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('tracking-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        async function loadRecentReports() {
+            try {
+                const res = await window.CivicConnectAPI.getIssues();
+                const tbody = document.getElementById('recent-reports-body');
+                
+                if (res.success && res.data.length > 0) {
+                    // Take top 5
+                    const reports = res.data.slice(0, 5);
+                    
+                    tbody.innerHTML = reports.map(report => {
+                        const statusClass = report.status === 'resolved' || report.status === 'active' ? 'status-active' : 'status-pending';
+                        const displayStatus = report.status.replace('_', ' ');
+                        return `
+                        <tr>
+                            <td>#${report.id}</td>
+                            <td style="font-weight: 500;">${report.category}</td>
+                            <td>${report.area || 'Unknown'}</td>
+                            <td><span class="status-pill ${statusClass}">${displayStatus}</span></td>
+                            <td><button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="openReviewModal(${report.id})">Review</button></td>
+                        </tr>
+                        `;
+                    }).join('');
+                } else {
+                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No visible reports found</td></tr>';
+                }
+            } catch (e) {
+                console.error("Failed to load reports", e);
+                 document.getElementById('recent-reports-body').innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444;">Failed to load data</td></tr>';
+            }
+        }
+
+        // Fetch Stats
+        async function fetchStats() {
+            try {
+                // Use standard API path with unique timestamp to prevent caching
+                // MUST use window.CivicConnectAPI to avoid conflict with the class declaration
+                const response = await window.CivicConnectAPI.request('authority_backend.php?action=overview&t=' + Date.now());
+                if (response.success) {
+                    const stats = response.stats;
+                    const values = document.querySelectorAll('.stat-value');
+                    
+                    if(values.length >= 4) {
+                        values[0].textContent = stats.total;
+                        values[1].textContent = stats.volunteers;
+                        values[2].textContent = stats.pending;
+                        values[3].textContent = stats.resolution_rate + '%';
+                    }
+                } else {
+                     throw new Error(response.error || 'API Error');
+                }
+            } catch (e) {
+                console.error("Stats fetch error", e);
+                // Show error in UI
+                document.querySelectorAll('.stat-value').forEach(el => {
+                    el.textContent = 'Err';
+                    el.style.fontSize = '12px'; // Smaller font for errors
+                    el.innerText = e.message; // Explicitly show message
+                });
+            }
+        }
+        
+        async function loadRecentVolunteers() {
+            try {
+                const res = await window.CivicConnectAPI.request('users.php?role=volunteer');
+                const container = document.getElementById('new-volunteers-list');
+                
+                if (res.success && res.data.length > 0) {
+                    // Get top 3
+                    const volunteers = res.data.slice(0, 3);
+                    
+                    container.innerHTML = volunteers.map((vol, index) => {
+                        // Calculate time ago
+                        const joinedDate = new Date(vol.created_at);
+                        const now = new Date();
+                        const diffInSeconds = Math.floor((now - joinedDate) / 1000);
+                        let timeString = '';
+                        
+                        if (diffInSeconds < 60) timeString = 'Just now';
+                        else if (diffInSeconds < 3600) timeString = Math.floor(diffInSeconds / 60) + 'm ago';
+                        else if (diffInSeconds < 86400) timeString = Math.floor(diffInSeconds / 3600) + 'h ago';
+                        else timeString = Math.floor(diffInSeconds / 86400) + 'd ago';
+                        
+                        // Handle potential multiple names or initials
+                        const initials = vol.full_name ? vol.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '??';
+                        
+                        // Colors (cycling)
+                        const bgs = ['#dcfce7', '#dbeafe', '#fce7f3'];
+                        const colors = ['#166534', '#1e40af', '#9d174d'];
+                        const bg = bgs[index % 3];
+                        const color = colors[index % 3];
+                        
+                        return `
+                        <div style="display: flex; align-items: center; gap: 10px; padding-bottom: ${index === volunteers.length - 1 ? '0' : '1rem'}; border-bottom: ${index === volunteers.length - 1 ? 'none' : '1px solid #f1f5f9'};">
+                            <div style="width: 40px; height: 40px; background: ${bg}; color: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">${initials}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 0.95rem;">${vol.full_name}</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">Joined ${timeString}</div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+                        </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 1rem;">No new volunteers</div>';
+                }
+            } catch (e) {
+                console.error("Failed to load volunteers", e);
+                document.getElementById('new-volunteers-list').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 1rem;">Failed to load</div>';
+            }
+        }
+
+        fetchStats();
+        loadRecentVolunteers();
+    </script>
+</body>
+</html>

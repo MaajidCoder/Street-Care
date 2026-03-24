@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authority Dashboard - Street Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <style>
+        /* Authority Specific Overrides */
+        :root { --primary-color: #6366f1; --primary-dark: #4f46e5; }
+        .sidebar { background: #1e1b4b; border-right: none; color: white; }
+        .sidebar .nav-link { color: #a5b4fc; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #312e81; color: white; }
+        .sidebar .logo { color: white; }
+        .user-profile { border-top-color: #312e81; color: white; }
+        .avatar { background-color: #4f46e5; }
+        
+        .action-bar { display: flex; gap: 10px; }
+        .btn-resolve { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-reject { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-university"></i>
+                Street Care Auth
+            </div>
+            
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i class="fas fa-map-marked-alt"></i>
+                        Issue Map
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-tasks"></i>
+                        Work Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        Reports
+                    </a>
+                </li>
+            </ul>
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="font-weight: 600;" id="user-name">Authority Officer</div>
+                    <div style="font-size: 0.8rem; color: #a5b4fc;">Dept. of Public Works</div>
+                </div>
+                <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a5b4fc;" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Command Center</h1>
+                    <p>Overview of city infrastructure and incoming reports.</p>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Pending Reviews</div>
+                    <div class="stat-value" id="stat-pending" style="color: #f59e0b;">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Critical Issues</div>
+                    <div class="stat-value" id="stat-progress" style="color: #ef4444;">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Resolved (Total)</div>
+                    <div class="stat-value" id="stat-resolved" style="color: #10b981;">-</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 1.5rem;">Incoming Reports</h3>
+            
+            <div id="issues-list" class="issues-grid">
+                <div style="grid-column: 1/-1; text-align: center; color: white;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading incoming reports...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/api.js"></script>
+    <script>
+         const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+         if(user.full_name) document.getElementById('user-name').textContent = user.full_name;
+
+         async function fetchStats() {
+             try {
+                 const res = await window.CivicConnectAPI.request('../backend/api/authority_backend.php?action=overview');
+                 if(res.success) {
+                     const stats = res.stats;
+                     document.getElementById('stat-pending').textContent = stats.pending;
+                     document.getElementById('stat-progress').textContent = stats.critical; // Using critical for 'Work in Progress' or just map correctly
+                     // Actually authority_backend returns: total, pending, resolved, critical
+                     // The UI has: Pending Reviews, Work in Progress, Resolved
+                     // Let's map Critical -> Work in Progress for now, or just calculate from issues list
+                     
+                     // Better mapping based on UI labels:
+                     document.getElementById('stat-pending').textContent = stats.pending;
+                     document.getElementById('stat-resolved').textContent = stats.resolved;
+                     
+                     // For "Work in Progress", we might need to rely on what we have or just use 'critical' as placeholder
+                     // Or fetch all issues and filter. 
+                     // Let's use 'critical' as 'Work in Progress' count is not explicitly in the 'overview' stats (my bad in backend design?)
+                     // checking authority_backend.php... it has 'total', 'pending', 'resolved', 'critical'. 
+                     // I will use total - pending - resolved for "in progress" estimation, or just use 0 if not available.
+                     // Actually, let's just use a placeholder or calculate it from the list if possible.
+                     // For now, I'll map 'Critical' count to the second box just to show data flow.
+                     document.getElementById('stat-progress').textContent = stats.critical; 
+                 }
+             } catch(e) { console.error(e); }
+         }
+
+         async function loadDashboard() {
+            fetchStats();
+            try {
+                const res = await window.CivicConnectAPI.getIssues(); // Fetch all issues
+                const container = document.getElementById('issues-list');
+                
+                if (res.success && res.data.length > 0) {
+                    const pendingIssues = res.data.filter(i => i.status === 'pending' || i.status === 'in_progress');
+                    
+                    if (pendingIssues.length === 0) {
+                        container.innerHTML = '<p style="color:white; text-align:center;">No pending issues to review.</p>';
+                        return;
+                    }
+
+                    container.innerHTML = pendingIssues.map(issue => `
+                        <div class="issue-card">
+                            <div class="issue-header">
+                                <span class="status-badge status-pending" style="color: white; background: #ef4444;">${issue.priority || 'Medium'}</span>
+                                <small>#${issue.id}</small>
+                            </div>
+                            <div class="issue-body">
+                                <h4 class="issue-title">${issue.title}</h4>
+                                <p class="issue-desc">${issue.description}</p>
+                                <small style="display:block; margin-top:5px; color:#6b7280;"><i class="fas fa-map-marker-alt"></i> ${issue.location_address || issue.area}</small>
+                            </div>
+                            <div class="issue-footer">
+                                <div class="action-bar" style="width: 100%;">
+                                    <button onclick="updateStatus(${issue.id}, 'resolved')" class="btn-resolve" style="flex: 1;">Resolve</button>
+                                    <button onclick="updateStatus(${issue.id}, 'closed')" class="btn-reject" style="flex: 1;">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color:white; text-align:center;">No issues found in system.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('issues-list').innerHTML = '<p style="color:red; text-align:center;">Error loading issues.</p>';
+            }
+         }
+
+         async function updateStatus(id, status) {
+             if(!confirm('Are you sure you want to mark this issue as ' + status + '?')) return;
+             try {
+                 const res = await window.CivicConnectAPI.updateIssueStatus(id, status);
+                 if (res.success) {
+                     alert('Issue updated');
+                     loadDashboard(); // Refresh
+                 } else {
+                     alert('Failed to update: ' + res.error);
+                 }
+             } catch (err) {
+                 alert('Error updating status');
+             }
+         }
+
+         loadDashboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Dashboard - Street Care</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body class="theme-volunteer"> <!-- Applied Green Theme -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-hands-helping"></i>
+            Street Care
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link active">
+                    <i class="fas fa-th-large"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="find_tasks.html" class="nav-link">
+                    <i class="fas fa-search-location"></i>
+                    Find Tasks
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_tasks.html" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    My Assignments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="my_impact.html" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    My Impact
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="profile.html" class="nav-link">
+                    <i class="fas fa-user-circle"></i>
+                    Profile
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar" style="background: #10b981;">?</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="user-name">Loading...</div>
+                <div style="font-size: 0.75rem; color: #a7f3d0;">Volunteer Hero</div>
+            </div>
+            <button onclick="window.CivicConnectAPI.logout()" style="background: none; border: none; cursor: pointer; color: #a7f3d0; padding: 5px;" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Hello, Volunteer!</h1>
+                <p>Ready to make a difference in your community today?</p>
+            </div>
+            <a href="find_tasks.html" class="btn-primary">
+                <i class="fas fa-search"></i> Find Tasks Near Me
+            </a>
+        </div>
+
+        <!-- Volunteer Specific Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                </div>
+                <div class="stat-label">Tasks Completed</div>
+                <div class="stat-value" id="tasks-completed">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-label">Hours Volunteered</div>
+                <div class="stat-value" id="hours-volunteered">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon icon-purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <div class="stat-label">Impact Score</div>
+                <div class="stat-value" id="impact-score">0</div>
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Recommended Tasks For You</h3>
+        
+        <div id="tasks-list" class="issues-grid">
+            <!-- Loading -->
+            <p>Finding opportunities...</p>
+        </div>
+    </div>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+     <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+        
+        // Set User Info
+        if(user.full_name) {
+            document.getElementById('user-name').textContent = user.full_name;
+            document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                margin-top: 10px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideIn 0.3s ease-out;
+                font-weight: 500;
+            `;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+        `;
+        document.head.appendChild(style);
+
+        async function handleTaskAction(btn, action, issueId) {
+            // Visual Feedback on Button
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+            btn.disabled = true;
+
+            try {
+                if (action === 'accept') {
+                     const res = await window.CivicConnectAPI.request('volunteers_backend.php?action=accept_task', 'POST', {
+                         issue_id: issueId,
+                         user_id: user.id
+                     });
+                     
+                     if (res.success) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> Accepted';
+                        btn.style.background = '#059669';
+                        showToast('Task Accepted. Thank you for making a difference!');
+                        // Refresh after delay
+                        setTimeout(loadDashboard, 1500);
+                     } else {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        showToast('Failed: ' + res.error, 'error');
+                     }
+                }
+            } catch (e) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Error processing request', 'error');
+            }
+        }
+        
+        async function fetchStats() {
+            try {
+                const res = await window.CivicConnectAPI.request(`volunteers_backend.php?action=stats&user_id=${user.id}`);
+                if(res.success) {
+                    document.getElementById('tasks-completed').textContent = res.stats.completed;
+                    document.getElementById('hours-volunteered').textContent = res.stats.hours;
+                    document.getElementById('impact-score').textContent = 'Top ' + (res.stats.completed > 10 ? '5%' : '20%');
+                }
+            } catch(e) {}
+        }
+
+        async function loadDashboard() {
+            fetchStats();
+            try {
+                const res = await window.CivicConnectAPI.getIssues();
+                const container = document.getElementById('tasks-list');
+                
+                if (res.success && res.data.length > 0) {
+                    // Filter for issues that are pending (available)
+                    const openTasks = res.data.filter(i => i.status === 'pending');
+                    
+                    if (openTasks.length === 0) {
+                        showEmptyState(container);
+                        return;
+                    }
+
+                    container.innerHTML = openTasks.map(task => `
+                        <div class="issue-card">
+                            <div class="issue-header">
+                                <span class="status-badge status-pending" style="background: #ecfdf5; color: #059669;">New Task</span>
+                                <small style="color: #64748b;">${task.category || 'General'}</small>
+                            </div>
+                            <div class="issue-body">
+                                <h4 class="issue-title">${task.title}</h4>
+                                <p class="issue-desc">${task.description}</p>
+                            </div>
+                            <div class="issue-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                                <small style="color: #94a3b8;"><i class="fas fa-map-marker-alt"></i> ${task.area}</small>
+                                <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="handleTaskAction(this, 'accept', ${task.id})">Accept</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    showEmptyState(container);
+                }
+            } catch (err) {
+               showEmptyState(document.getElementById('tasks-list'));
+            }
+        }
+
+        function showEmptyState(container) {
+             container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+                    <h3>All caught up!</h3>
+                    <p>There are no new tasks available at the moment. Great job!</p>
+                </div>
+            `;
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# civicconnect/.htaccess
+Options +FollowSymLinks -MultiViews
+RewriteEngine On
+
+# Disable directory listing
+Options -Indexes
+
+# Setup base - IMPORTANT for subdirectories
+RewriteBase /street%20care/civicconnect/
+
+# Handle API requests (Proxy style)
+# If the URL contains /api/, map it to backend/api/
+RewriteCond %{REQUEST_URI} /api/ [NC]
+RewriteRule ^api/(.*)$ backend/api/$1 [L,QSA]
+
+# Handle Frontend requests
+# If NOT /api/ and NOT /backend/ and NOT a file/directory
+RewriteCond %{REQUEST_URI} !/api/ [NC]
+RewriteCond %{REQUEST_URI} !/backend/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ frontend/$1 [L,QSA]
+
+# Default document
+DirectoryIndex frontend/index.html index.html index.php
